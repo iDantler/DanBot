@@ -1,0 +1,35 @@
+body.dark-mode {
+    --primary-color: #5865f2;
+    --secondary-color: #4f545c;
+    --background-color: #2f3136;
+    --card-background: #36393f;
+    --text-color: #dcddde;
+    --text-muted: #72767d;
+    --border-color: #202225;
+    --hover-color: #40444b;
+    --shadow-color: rgba(0, 0, 0, 0.2);
+}
+
+body.dark-mode .server-profile:hover {
+    background-color: #454950;
+}
+
+body.dark-mode .server-dropdown li:hover {
+    background-color: var(--primary-color);
+    color: #ffffff;
+}
+
+body.dark-mode .navigation li a:hover,
+body.dark-mode .navigation li a.active {
+    background-color: var(--primary-color);
+    color: #ffffff;
+}
+
+body.dark-mode .embed-item:hover {
+    background-color: #454950;
+}
+
+body.dark-mode .add-field-button,
+body.dark-mode .remove-field-button {
+    color: #ffffff;
+}

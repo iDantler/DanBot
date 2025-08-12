@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editar Embed</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/dark-mode.css">
+</head>
+<body>
+
+    <header class="sidebar">
+        <div class="header-content">
+            <div class="logo">
+                <i class="fas fa-robot"></i>
+                <h1>Bot Panel</h1>
+            </div>
+        </div>
+
+        <nav class="navigation">
+            <ul>
+                <li><a href="/" id="nav-create"><i class="fas fa-plus-square"></i> Crear Embed</a></li>
+                <li><a href="/embeds" id="nav-view" class="active"><i class="fas fa-list"></i> Ver Embeds</a></li>
+            </ul>
+        </nav>
+        
+        <div class="server-profile" id="server-profile">
+            <div class="server-icon-container">
+                <img id="server-icon" src="" alt="Icono del servidor" style="display: none;">
+                <div id="server-initial-icon" class="server-initial-icon"></div>
+            </div>
+            <span id="server-name">Selecciona un servidor</span>
+            <i class="fas fa-chevron-down dropdown-arrow"></i>
+        </div>
+        <ul class="server-dropdown" id="server-dropdown"></ul>
+
+        <div class="theme-toggle">
+            <label class="switch">
+                <input type="checkbox" id="theme-toggle-checkbox">
+                <span class="slider round"></span>
+            </label>
+            <span>Modo Oscuro</span>
+        </div>
+    </header>
+
+    <main class="main-content">
+        <section class="content-section" id="edit-embed-section">
+            <div class="form-container">
+                <h3>Editar Embed</h3>
+                <form id="edit-embed-form">
+                    <input type="hidden" id="embed-message-id" name="embedMessageId">
+                    <div class="form-row">
+                        <label for="channel-select">Canal de Texto</label>
+                        <select id="channel-select" name="channelId" required>
+                            <option value="">Selecciona un canal</option>
+                        </select>
+                    </div>
+                    <div class="form-row">
+                        <label for="role-select">Rol a Asignar</label>
+                        <select id="role-select" name="roleId" required>
+                            <option value="">Selecciona un rol</option>
+                        </select>
+                    </div>
+                    <div class="form-row">
+                        <label for="reactionEmoji">Emoji de Reacción</label>
+                        <input type="text" id="reactionEmoji" name="reactionEmoji" placeholder="Ej: ✅" required>
+                    </div>
+                    <hr>
+                    <div class="form-row">
+                        <label for="titulo">Título</label>
+                        <input type="text" id="titulo" name="titulo" placeholder="Título del Embed">
+                    </div>
+                    <div class="form-row">
+                        <label for="autor">Autor</label>
+                        <input type="text" id="autor" name="autor" placeholder="Autor del Embed">
+                    </div>
+                    <div class="form-row">
+                        <label for="color">Color (Hex)</label>
+                        <input type="color" id="color" name="color" value="#5865f2">
+                    </div>
+                    <div class="form-row">
+                        <label for="descripcion">Descripción</label>
+                        <textarea id="descripcion" name="descripcion" placeholder="Descripción del Embed (usa markdown)"></textarea>
+                    </div>
+                    <div class="form-row">
+                        <label for="imagen">URL de la Imagen</label>
+                        <input type="url" id="imagen" name="imagen" placeholder="URL de la imagen principal">
+                    </div>
+                    <hr>
+                    <div class="form-row">
+                        <label>Campos Adicionales</label>
+                        <div id="additional-fields"></div>
+                        <button type="button" class="add-field-button" onclick="addField()"><i class="fas fa-plus"></i> Añadir Campo</button>
+                    </div>
+                    <hr>
+                    <div class="form-row">
+                        <label for="pie">Pie de página</label>
+                        <input type="text" id="pie" name="pie" placeholder="Texto del pie de página">
+                    </div>
+                    <div class="form-row">
+                        <label for="pieIcono">URL de Ícono para el pie</label>
+                        <input type="url" id="pieIcono" name="pieIcono" placeholder="URL del ícono pequeño">
+                    </div>
+                    <button type="submit" id="save-button" class="submit-button">Guardar Cambios</button>
+                    <p id="status-message" class="status-message"></p>
+                </form>
+            </div>
+
+            <div class="preview-container">
+                <h3>Vista Previa</h3>
+                <div class="embed-preview" id="embed-preview"></div>
+            </div>
+        </section>
+    </main>
+
+    <script src="/js/edit.js"></script>
+    <script src="/js/theme-toggle.js"></script>
+    
+</body>
+</html>

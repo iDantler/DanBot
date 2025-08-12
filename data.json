@@ -1,0 +1,61 @@
+[
+  {
+    "guildId": "1054148346014613544",
+    "embedMessageId": "1402366042558169149",
+    "channelId": "1391081035986632754",
+    "reactionEmoji": "🦝",
+    "roleId": "1402284384169754774",
+    "embedContent": {
+      "color": 9764685,
+      "title": "Reacciona para obtener el Rol de ( 🦝 | TFT )",
+      "description": "Al reaccionar desbloquearás un canal de texto exclusivo de TFT.",
+      "fields": [
+        {
+          "name": "¿Qué encontrarás?",
+          "value": "Compos y estrategias.",
+          "inline": true
+        },
+        {
+          "name": "🏆¡Sube de elo!🏆",
+          "value": "No dudes en preguntar lo que desees.",
+          "inline": true
+        }
+      ],
+      "footer": {
+        "text": "Hecho con ❤️ para la comunidad de TFT",
+        "icon_url": "https://i.imgur.com/k6wMv4V.png"
+      },
+      "timestamp": "2025-08-08T14:47:27.000Z"
+    }
+  },
+  {
+    "guildId": "1402302418502422609",
+    "embedMessageId": "1404819889801138186",
+    "channelId": "1402302419760582830",
+    "reactionEmoji": "🤑",
+    "roleId": "1402302860405768283",
+    "embedContent": {
+      "color": 1777478,
+      "title": "Esto es una prueba",
+      "description": "Dantler",
+      "timestamp": "2025-08-12T13:32:41.948Z",
+      "author": {
+        "name": "iDantler"
+      },
+      "image": {
+        "url": "https://static-cdn.jtvnw.net/jtv_user_pictures/6b7e7db3-ed8b-41fd-8494-c0ae7686d7c1-profile_image-70x70.png"
+      },
+      "footer": {
+        "text": "Dantlersito",
+        "icon_url": "https://static-cdn.jtvnw.net/jtv_user_pictures/6b7e7db3-ed8b-41fd-8494-c0ae7686d7c1-profile_image-70x70.png"
+      },
+      "fields": [
+        {
+          "name": "🟣 Estamos aqui",
+          "value": "hola2",
+          "inline": true
+        }
+      ]
+    }
+  }
+]
