@@ -19,6 +19,9 @@ const channelSelect = document.getElementById('channel-select');
 const roleSelect = document.getElementById('role-select');
 const themeToggleCheckbox = document.getElementById('theme-toggle-checkbox');
 
+// AÑADIDO: Elemento del DOM para el emoji de reacción
+const reactionEmojiInput = document.getElementById('reactionEmoji');
+
 
 if (navCreate && navView) {
     navCreate.addEventListener('click', (e) => {
@@ -289,6 +292,7 @@ function applyMarkdown(text) {
     return formattedText;
 }
 
+// CORRECCIÓN: Se actualiza la función updatePreview para que capture el valor del emoji
 function updatePreview() {
     if (!form || !previewContainer) return;
 
@@ -299,6 +303,7 @@ function updatePreview() {
     const imagen = form.imagen.value;
     const pie = form.pie.value;
     const pieIcono = form.pieIcono.value;
+    const reactionEmoji = reactionEmojiInput.value;
 
     let fieldsHtml = '';
     const fieldNames = form.querySelectorAll('input[name="fieldNames[]"]');
@@ -325,6 +330,7 @@ function updatePreview() {
             ${pieIcono ? `<img src="${pieIcono}" alt="Icono del pie">` : ''}
             ${applyMarkdown(pie)}
         </div>` : ''}
+        ${reactionEmoji ? `<div class="embed-reactions"><span>${reactionEmoji}</span></div>` : ''}
     `;
 }
 
@@ -341,6 +347,9 @@ if (form) {
         const formData = new FormData(form);
         const data = Object.fromEntries(formData.entries());
         data.guildId = selectedGuildId;
+        
+        // CORRECCIÓN: Se agrega la variable del emoji a los datos del formulario
+        data.reactionEmoji = reactionEmojiInput.value;
         
         const fieldNames = formData.getAll('fieldNames[]');
         const fieldValues = formData.getAll('fieldValues[]');
@@ -366,7 +375,7 @@ if (form) {
                     statusMessage.className = 'status-message confirmation';
                     form.reset();
                     if (additionalFieldsContainer) {
-                         additionalFieldsContainer.innerHTML = '';
+                            additionalFieldsContainer.innerHTML = '';
                     }
                     updatePreview();
                 } else {

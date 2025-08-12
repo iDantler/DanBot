@@ -1,3 +1,4 @@
 # Archivo .gitignore
 .env
 node_modules/
+data.json
