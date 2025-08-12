@@ -1,8 +1,5 @@
 document.addEventListener('DOMContentLoaded', async () => {
-    // Variable para almacenar el ID del servidor seleccionado
     let selectedGuildId = localStorage.getItem('selectedGuildId');
-
-    // Elementos del DOM
     const navCreate = document.getElementById('nav-create');
     const navView = document.getElementById('nav-view');
     const serverProfile = document.getElementById('server-profile');
@@ -17,9 +14,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     const channelSelect = document.getElementById('channel-select');
     const roleSelect = document.getElementById('role-select');
     const themeToggleCheckbox = document.getElementById('theme-toggle-checkbox');
-    const reactionEmojiInput = document.getElementById('reactionEmoji'); // Nuevo: campo de emoji de reacción
+    const reactionEmojiInput = document.getElementById('reactionEmoji');
 
-    // Lógica para el cambio de tema
     const isDarkMode = localStorage.getItem('darkMode') === 'true';
     if (isDarkMode) {
         document.body.classList.add('dark-mode');
@@ -224,13 +220,15 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     function updatePreview() {
         if (!form || !previewContainer) return;
-        const color = form.color.value || '#5865f2';
-        const autor = form.autor.value;
-        const titulo = form.titulo.value;
-        const descripcion = form.descripcion.value;
-        const imagen = form.imagen.value;
-        const pie = form.pie.value;
-        const pieIcono = form.pieIcono.value;
+
+        const color = form.color?.value || '#5865f2';
+        const autor = form.autor?.value || '';
+        const titulo = form.titulo?.value || '';
+        const descripcion = form.descripcion?.value || '';
+        const imagen = form.imagen?.value || '';
+        const thumbnail = form.thumbnail?.value || '';
+        const footer = form.footer?.value || '';
+        const footerIcon = form.footerIcon?.value || '';
 
         let fieldsHtml = '';
         const fieldNames = form.querySelectorAll('input[name="fieldNames[]"]');
@@ -247,15 +245,21 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         previewContainer.style.setProperty('--embed-color', color);
+        
+        const hasFooterContent = (footer && footer.trim().length > 0) || (footerIcon && footerIcon.trim().length > 0);
+        const hasImage = imagen && imagen.trim().length > 0;
+        const hasThumbnail = thumbnail && thumbnail.trim().length > 0;
+
         previewContainer.innerHTML = `
             ${autor ? `<div class="embed-preview-author">${applyMarkdown(autor)}</div>` : ''}
             ${titulo ? `<div class="embed-preview-title">${applyMarkdown(titulo)}</div>` : ''}
             ${descripcion ? `<div class="embed-preview-description">${applyMarkdown(descripcion).replace(/\n/g, '<br>')}</div>` : ''}
+            ${hasThumbnail ? `<div class="embed-preview-thumbnail"><img src="${thumbnail}" alt="Miniatura"></div>` : ''}
             ${fieldsHtml ? `<div class="embed-preview-fields">${fieldsHtml}</div>` : ''}
-            ${imagen ? `<img class="embed-preview-image" src="${imagen}" alt="Imagen del embed">` : ''}
-            ${pie ? `<div class="embed-preview-footer">
-                ${pieIcono ? `<img src="${pieIcono}" alt="Icono del pie">` : ''}
-                ${applyMarkdown(pie)}
+            ${hasImage ? `<img class="embed-preview-image" src="${imagen}" alt="Imagen del embed">` : ''}
+            ${hasFooterContent ? `<div class="embed-preview-footer">
+                ${footerIcon ? `<img src="${footerIcon}" alt="Icono del pie">` : ''}
+                ${footer ? applyMarkdown(footer) : ''}
             </div>` : ''}
         `;
     }
@@ -310,35 +314,41 @@ document.addEventListener('DOMContentLoaded', async () => {
         try {
             const response = await fetch(`/api/get-embed/${embedId}`);
             if (!response.ok) throw new Error('Embed no encontrado.');
-            const embedData = await response.json();
+            const embed = await response.json();
             
-            // Cargar los datos del embed
-            form.color.value = `#${(embedData.embedContent.color).toString(16).padStart(6, '0')}`;
-            form.autor.value = embedData.embedContent.author?.name || '';
-            form.titulo.value = embedData.embedContent.title || '';
-            form.descripcion.value = embedData.embedContent.description || '';
-            form.imagen.value = embedData.embedContent.image?.url || '';
-            form.pie.value = embedData.embedContent.footer?.text || '';
-            form.pieIcono.value = embedData.embedContent.footer?.icon_url || '';
-            
-            // Ahora rellenamos también el emoji de reacción
-            if (reactionEmojiInput) {
-                reactionEmojiInput.value = embedData.reactionEmoji || '';
-            }
+            if (embed.embedContent) {
+                const embedContent = embed.embedContent;
+                
+                if (form.color) form.color.value = `#${(embedContent.color || 0).toString(16).padStart(6, '0')}`;
+                if (form.autor) form.autor.value = embedContent.author?.name || '';
+                if (form.titulo) form.titulo.value = embedContent.title || '';
+                if (form.descripcion) form.descripcion.value = embedContent.description || '';
+                
+                if (form.imagen) form.imagen.value = embedContent.image?.url || '';
+                if (form.thumbnail) form.thumbnail.value = embedContent.thumbnail?.url || '';
 
-            // Cargar los campos adicionales
-            if (additionalFieldsContainer) {
-                additionalFieldsContainer.innerHTML = '';
-            }
-            if (embedData.embedContent.fields) {
-                embedData.embedContent.fields.forEach(field => {
-                    addField(field.name, field.value);
-                });
+                if (form.footer) form.footer.value = embedContent.footer?.text || '';
+                if (form.footerIcon) form.footerIcon.value = embedContent.footer?.icon_url || '';
+                
+                if (reactionEmojiInput) {
+                    reactionEmojiInput.value = embed.reactionEmoji || '';
+                }
+
+                if (additionalFieldsContainer) {
+                    additionalFieldsContainer.innerHTML = '';
+                }
+                if (embedContent.fields) {
+                    embedContent.fields.forEach(field => {
+                        addField(field.name, field.value);
+                    });
+                }
+            } else {
+                console.error('La propiedad embedContent no se encontró en la respuesta de la API.');
             }
 
             await loadData();
-            if (channelSelect) channelSelect.value = embedData.channelId;
-            if (roleSelect) roleSelect.value = embedData.roleId;
+            if (channelSelect) channelSelect.value = embed.channelId;
+            if (roleSelect) roleSelect.value = embed.roleId;
 
             updatePreview();
 

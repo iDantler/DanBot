@@ -18,30 +18,73 @@ const additionalFieldsContainer = document.getElementById('additional-fields');
 const channelSelect = document.getElementById('channel-select');
 const roleSelect = document.getElementById('role-select');
 const themeToggleCheckbox = document.getElementById('theme-toggle-checkbox');
-
-// AÑADIDO: Elemento del DOM para el emoji de reacción
 const reactionEmojiInput = document.getElementById('reactionEmoji');
 
+// NUEVOS ELEMENTOS DEL DOM
+const deletedEmbedsSection = document.getElementById('deleted-embeds-section');
+const navDeleted = document.getElementById('nav-deleted');
+
+// Lógica para el cambio de tema
+const isDarkMode = localStorage.getItem('darkMode') === 'true';
+if (isDarkMode) {
+    document.body.classList.add('dark-mode');
+    if (themeToggleCheckbox) {
+        themeToggleCheckbox.checked = true;
+    }
+}
+
+if (themeToggleCheckbox) {
+    themeToggleCheckbox.addEventListener('change', () => {
+        if (themeToggleCheckbox.checked) {
+            document.body.classList.add('dark-mode');
+            localStorage.setItem('darkMode', 'true');
+        } else {
+            document.body.classList.remove('dark-mode');
+            localStorage.setItem('darkMode', 'false');
+        }
+    });
+}
 
 if (navCreate && navView) {
     navCreate.addEventListener('click', (e) => {
         e.preventDefault();
         createSection.style.display = 'block';
         viewSection.style.display = 'none';
+        deletedEmbedsSection.style.display = 'none';
         navCreate.classList.add('active');
         navView.classList.remove('active');
+        if (navDeleted) navDeleted.classList.remove('active');
     });
 
     navView.addEventListener('click', (e) => {
         e.preventDefault();
         createSection.style.display = 'none';
         viewSection.style.display = 'block';
+        deletedEmbedsSection.style.display = 'none';
         navCreate.classList.remove('active');
         navView.classList.add('active');
+        if (navDeleted) navDeleted.classList.remove('active');
         if (selectedGuildId) {
             loadEmbedsList();
         } else {
             document.getElementById('embeds-container').innerHTML = '<p>Por favor, selecciona un servidor.</p>';
+        }
+    });
+}
+
+if (navDeleted) {
+    navDeleted.addEventListener('click', (e) => {
+        e.preventDefault();
+        createSection.style.display = 'none';
+        viewSection.style.display = 'none';
+        deletedEmbedsSection.style.display = 'block';
+        navCreate.classList.remove('active');
+        navView.classList.remove('active');
+        navDeleted.classList.add('active');
+        if (selectedGuildId) {
+            loadDeletedEmbedsList();
+        } else {
+            document.getElementById('deleted-embeds-container').innerHTML = '<p>Por favor, selecciona un servidor.</p>';
         }
     });
 }
@@ -58,8 +101,53 @@ document.addEventListener('click', (e) => {
     }
 });
 
+// NUEVA FUNCIÓN PARA DUPLICAR DESDE LA VISTA PRINCIPAL
+window.duplicateEmbed = async function(messageId) {
+    try {
+        const response = await fetch(`/api/embeds/${messageId}`);
+        if (!response.ok) throw new Error('Error al obtener el embed para duplicar.');
+        const embedToDuplicate = await response.json();
+        
+        // Cargar los datos del embed en el formulario
+        document.getElementById('titulo').value = embedToDuplicate.embedContent.title || '';
+        document.getElementById('autor').value = embedToDuplicate.embedContent.author || '';
+        document.getElementById('color').value = embedToDuplicate.embedContent.color || '#5865f2';
+        document.getElementById('descripcion').value = embedToDuplicate.embedContent.description || '';
+        document.getElementById('imagen').value = embedToDuplicate.embedContent.image || '';
+        document.getElementById('thumbnail').value = embedToDuplicate.embedContent.thumbnail || '';
+        document.getElementById('footer').value = embedToDuplicate.embedContent.footer || '';
+        document.getElementById('footerIcon').value = embedToDuplicate.embedContent.footerIcon || '';
+        document.getElementById('reactionEmoji').value = embedToDuplicate.reactionEmoji || '';
+
+        // Limpiar y añadir campos adicionales
+        additionalFieldsContainer.innerHTML = '';
+        if (embedToDuplicate.embedContent.fields && embedToDuplicate.embedContent.fields.length > 0) {
+            embedToDuplicate.embedContent.fields.forEach(field => addField(field.name, field.value));
+        }
+
+        // Cambiar a la vista de creación y recargar canales/roles
+        createSection.style.display = 'block';
+        viewSection.style.display = 'none';
+        navCreate.classList.add('active');
+        navView.classList.remove('active');
+        await loadChannelsAndRoles(selectedGuildId);
+        channelSelect.value = embedToDuplicate.channelId;
+        roleSelect.value = embedToDuplicate.roleId;
+
+        // Mostrar un mensaje al usuario
+        alert('Embed duplicado. Ahora puedes editarlo y publicarlo como uno nuevo.');
+        updatePreview();
+    } catch (error) {
+        console.error('Error al duplicar el embed:', error);
+        alert('Error al duplicar el embed.');
+    }
+};
+
 window.addField = function(name = '', value = '') {
     if (!additionalFieldsContainer) return;
+    const noFieldsMessage = document.getElementById('no-fields-message');
+    if (noFieldsMessage) noFieldsMessage.style.display = 'none';
+    
     const newField = document.createElement('div');
     newField.className = 'field-group';
     newField.innerHTML = `
@@ -144,6 +232,20 @@ async function loadData() {
         if (serverName) serverName.textContent = 'Error';
         updateProfileIcon('?', null);
     }
+    
+    // Comprobar si hay un embed duplicado en el localStorage
+    const duplicatedEmbed = localStorage.getItem('duplicatedEmbed');
+    if (duplicatedEmbed) {
+        const embedData = JSON.parse(duplicatedEmbed);
+        populateFormFromEmbedData(embedData);
+        localStorage.removeItem('duplicatedEmbed');
+        if (selectedGuildId) {
+            await loadChannelsAndRoles(selectedGuildId);
+            channelSelect.value = embedData.channelId;
+            roleSelect.value = embedData.roleId;
+            updatePreview();
+        }
+    }
 }
 
 async function selectGuild(guildId, guildName, guildIcon) {
@@ -216,9 +318,7 @@ async function loadEmbedsList() {
         const response = await fetch('/api/embeds');
         if (!response.ok) throw new Error('Error al cargar la lista de embeds');
         const embeds = await response.json();
-        
-        const embedsForCurrentGuild = embeds.filter(e => e.guildId === selectedGuildId);
-        
+        const embedsForCurrentGuild = embeds.filter(e => e.guildId === selectedGuildId && !e.deleted); // Filtra los no eliminados
         if (embedsForCurrentGuild.length === 0) {
             embedsContainer.innerHTML = '<p>No hay embeds activos en este servidor.</p>';
         } else {
@@ -232,21 +332,21 @@ async function loadEmbedsList() {
                         <small>Canal: <span class="channel-name">...</span> | Emoji: ${embed.reactionEmoji}</small>
                     </div>
                     <div class="embed-actions">
+                        <button class="duplicate-button" onclick="duplicateEmbed('${embed.embedMessageId}')"><i class="fas fa-copy"></i> Duplicar</button>
                         <button class="edit-button" onclick="window.location.href='/edit?id=${embed.embedMessageId}'"><i class="fas fa-edit"></i> Editar</button>
                         <button class="delete-button" onclick="deleteEmbed('${embed.embedMessageId}')"><i class="fas fa-trash"></i> Eliminar</button>
                     </div>
                 `;
                 embedsContainer.appendChild(embedItem);
-
                 fetch(`/api/channels?guildId=${embed.guildId}`)
-                    .then(res => res.json())
-                    .then(channels => {
-                        const channel = channels.find(c => c.id === embed.channelId);
-                        if (channel) {
-                            embedItem.querySelector('.channel-name').textContent = `#${channel.name}`;
-                        }
-                    })
-                    .catch(err => console.error(err));
+                .then(res => res.json())
+                .then(channels => {
+                    const channel = channels.find(c => c.id === embed.channelId);
+                    if (channel) {
+                        embedItem.querySelector('.channel-name').textContent = `#${channel.name}`;
+                    }
+                })
+                .catch(err => console.error(err));
             });
         }
     } catch (error) {
@@ -255,32 +355,152 @@ async function loadEmbedsList() {
     }
 }
 
-async function deleteEmbed(embedId) {
-    if (!confirm('¿Estás seguro de que quieres eliminar este embed? También se eliminará del canal de Discord.')) {
+async function loadDeletedEmbedsList() {
+    const embedsContainer = document.getElementById('deleted-embeds-container');
+    const status = document.getElementById('deleted-embeds-status');
+    if (!embedsContainer) return;
+    status.textContent = 'Cargando embeds eliminados...';
+    if (!selectedGuildId) {
+        status.textContent = 'Por favor, selecciona un servidor para ver los embeds eliminados.';
         return;
     }
-
     try {
-        const response = await fetch(`/api/delete-embed/${embedId}`, {
-            method: 'DELETE'
-        });
-        const result = await response.json();
-        const statusMessage = document.getElementById('status-message');
-        if (result.success) {
-            statusMessage.innerHTML = `<i class="fas fa-check-circle"></i> ${result.message}`;
-            statusMessage.className = 'status-message confirmation';
-            loadEmbedsList();
+        const response = await fetch(`/api/deleted-embeds?guildId=${selectedGuildId}`);
+        if (!response.ok) throw new Error('Error al cargar la lista de embeds eliminados');
+        const deletedEmbeds = await response.json();
+        if (deletedEmbeds.length === 0) {
+            status.textContent = 'No hay embeds eliminados en este servidor.';
         } else {
-            statusMessage.innerHTML = `<i class="fas fa-exclamation-triangle"></i> ${result.message}`;
-            statusMessage.className = 'status-message error';
+            status.style.display = 'none';
+            embedsContainer.innerHTML = '';
+            deletedEmbeds.forEach(embed => {
+                const embedItem = document.createElement('div');
+                embedItem.className = 'embed-item deleted-item';
+                embedItem.innerHTML = `
+                    <div class="embed-info">
+                        <div class="embed-title">${embed.embedContent.title}</div>
+                        <small>Canal: <span class="channel-name">...</span> | Emoji: ${embed.reactionEmoji}</small>
+                    </div>
+                    <div class="embed-actions">
+                        <button class="recover-button" onclick="recoverEmbed('${embed.embedMessageId}')"><i class="fas fa-trash-restore"></i> Recuperar</button>
+                    </div>
+                `;
+                embedsContainer.appendChild(embedItem);
+            });
         }
     } catch (error) {
-        console.error('Error al eliminar el embed:', error);
-        const statusMessage = document.getElementById('status-message');
-        statusMessage.innerHTML = `<i class="fas fa-exclamation-triangle"></i> Ocurrió un error al eliminar el embed.`;
-        statusMessage.className = 'status-message error';
+        console.error('Error al cargar embeds eliminados:', error);
+        status.textContent = 'Error al cargar los embeds eliminados.';
     }
 }
+
+window.deleteEmbed = async function(messageId) {
+    if (!confirm('¿Estás seguro de que quieres eliminar este embed? Se moverá a la papelera de reciclaje.')) {
+        return;
+    }
+    try {
+        const response = await fetch(`/api/archive-embed/${messageId}`, {
+            method: 'PUT'
+        });
+        if (!response.ok) throw new Error('Error al archivar el embed.');
+        alert('Embed archivado exitosamente.');
+        loadEmbedsList();
+    } catch (error) {
+        console.error('Error al archivar el embed:', error);
+        alert('Error al archivar el embed.');
+    }
+};
+
+window.recoverEmbed = async function(messageId) {
+    if (!confirm('¿Estás seguro de que quieres recuperar este embed?')) {
+        return;
+    }
+    try {
+        const response = await fetch(`/api/recover-embed/${messageId}`, {
+            method: 'PUT'
+        });
+        if (!response.ok) throw new Error('Error al recuperar el embed.');
+        alert('Embed recuperado exitosamente.');
+        loadDeletedEmbedsList();
+    } catch (error) {
+        console.error('Error al recuperar el embed:', error);
+        alert('Error al recuperar el embed.');
+    }
+};
+
+form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const formData = new FormData(form);
+    const data = {};
+    for (const [key, value] of formData.entries()) {
+        if (key.endsWith('[]')) {
+            const fieldName = key.replace('[]', '');
+            if (!data[fieldName]) {
+                data[fieldName] = [];
+            }
+            data[fieldName].push(value);
+        } else {
+            data[key] = value;
+        }
+    }
+    
+    // Procesar campos adicionales
+    const fields = [];
+    const fieldNames = data.fieldNames || [];
+    const fieldValues = data.fieldValues || [];
+    for (let i = 0; i < fieldNames.length; i++) {
+        fields.push({
+            name: fieldNames[i],
+            value: fieldValues[i]
+        });
+    }
+    delete data.fieldNames;
+    delete data.fieldValues;
+
+    // Crear la estructura de datos final
+    const postData = {
+        guildId: selectedGuildId, 
+        channelId: data.channelId,
+        roleId: data.roleId,
+        reactionEmoji: data.reactionEmoji,
+        embedData: { // <-- ¡CAMBIADO DE 'embedContent' A 'embedData'!
+            title: data.titulo,
+            author: data.autor,
+            color: data.color,
+            description: data.descripcion,
+            image: data.imagen,
+            thumbnail: data.thumbnail,
+            footer: data.footer,
+            footerIcon: data.footerIcon,
+            fields: fields
+        }
+    };
+    
+    statusMessage.style.display = 'none';
+    statusMessage.className = 'status-message';
+    try {
+        const response = await fetch('/api/embed', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(postData)
+        });
+        
+        const result = await response.json();
+
+        if (response.ok) {
+            statusMessage.textContent = 'Embed publicado exitosamente.';
+            statusMessage.classList.add('confirmation');
+            form.reset();
+            updatePreview();
+        } else {
+            throw new Error(result.error || 'Error al publicar el embed.');
+        }
+    } catch (error) {
+        console.error('Error al publicar el embed:', error);
+        statusMessage.textContent = `Error: ${error.message}`;
+        statusMessage.classList.add('error');
+    }
+});
 
 function applyMarkdown(text) {
     if (!text) return '';
@@ -292,133 +512,109 @@ function applyMarkdown(text) {
     return formattedText;
 }
 
-// CORRECCIÓN: Se actualiza la función updatePreview para que capture el valor del emoji
 function updatePreview() {
     if (!form || !previewContainer) return;
-
+    const embedPreview = document.getElementById('embed-preview');
     const color = form.color.value || '#5865f2';
-    const autor = form.autor.value;
-    const titulo = form.titulo.value;
-    const descripcion = form.descripcion.value;
-    const imagen = form.imagen.value;
-    const pie = form.pie.value;
-    const pieIcono = form.pieIcono.value;
-    const reactionEmoji = reactionEmojiInput.value;
-
-    let fieldsHtml = '';
-    const fieldNames = form.querySelectorAll('input[name="fieldNames[]"]');
-    const fieldValues = form.querySelectorAll('input[name="fieldValues[]"]');
-    for (let i = 0; i < fieldNames.length; i++) {
-        if (fieldNames[i].value && fieldValues[i].value) {
-            fieldsHtml += `
-                <div class="embed-preview-field">
-                    <div class="embed-preview-field-name">${applyMarkdown(fieldNames[i].value)}</div>
-                    <div class="embed-preview-field-value">${applyMarkdown(fieldValues[i].value)}</div>
-                </div>
-            `;
-        }
-    }
-
-    previewContainer.style.setProperty('--embed-color', color);
-    previewContainer.innerHTML = `
-        ${autor ? `<div class="embed-preview-author">${applyMarkdown(autor)}</div>` : ''}
-        ${titulo ? `<div class="embed-preview-title">${applyMarkdown(titulo)}</div>` : ''}
-        ${descripcion ? `<div class="embed-preview-description">${applyMarkdown(descripcion).replace(/\n/g, '<br>')}</div>` : ''}
-        ${fieldsHtml ? `<div class="embed-preview-fields">${fieldsHtml}</div>` : ''}
-        ${imagen ? `<img class="embed-preview-image" src="${imagen}" alt="Imagen del embed">` : ''}
-        ${pie ? `<div class="embed-preview-footer">
-            ${pieIcono ? `<img src="${pieIcono}" alt="Icono del pie">` : ''}
-            ${applyMarkdown(pie)}
-        </div>` : ''}
-        ${reactionEmoji ? `<div class="embed-reactions"><span>${reactionEmoji}</span></div>` : ''}
-    `;
-}
-
-if (form) {
-    form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        if (!selectedGuildId) {
-            if (statusMessage) {
-                statusMessage.innerHTML = `<i class="fas fa-exclamation-triangle"></i> Por favor, selecciona un servidor primero.`;
-                statusMessage.className = 'status-message error';
-            }
-            return;
-        }
-        const formData = new FormData(form);
-        const data = Object.fromEntries(formData.entries());
-        data.guildId = selectedGuildId;
-        
-        // CORRECCIÓN: Se agrega la variable del emoji a los datos del formulario
-        data.reactionEmoji = reactionEmojiInput.value;
-        
-        const fieldNames = formData.getAll('fieldNames[]');
-        const fieldValues = formData.getAll('fieldValues[]');
-        data.fieldNames = fieldNames;
-        data.fieldValues = fieldValues;
-
-        if (statusMessage) {
-            statusMessage.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Creando embed...`;
-            statusMessage.className = 'status-message info';
-        }
-
-        try {
-            // RUTA CORREGIDA DE VUELTA A LA ORIGINAL
-            const response = await fetch('/crear-embed', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
-            });
-            const result = await response.json();
-            if (statusMessage) {
-                if (result.success) {
-                    statusMessage.innerHTML = `<i class="fas fa-check-circle"></i> ${result.message}`;
-                    statusMessage.className = 'status-message confirmation';
-                    form.reset();
-                    if (additionalFieldsContainer) {
-                            additionalFieldsContainer.innerHTML = '';
-                    }
-                    updatePreview();
-                } else {
-                    statusMessage.innerHTML = `<i class="fas fa-exclamation-triangle"></i> ${result.message}`;
-                    statusMessage.className = 'status-message error';
-                }
-            }
-        } catch (error) {
-            if (statusMessage) {
-                statusMessage.innerHTML = `<i class="fas fa-exclamation-triangle"></i> Ocurrió un error de conexión.`;
-                statusMessage.className = 'status-message error';
-            }
-            console.error('Error:', error);
-        }
-    });
-
-    form.addEventListener('input', updatePreview);
-}
-
-
-window.onload = () => {
-    loadData();
-    if (form) {
-      updatePreview();
-    }
     
-    const isDarkMode = localStorage.getItem('darkMode') === 'true';
-    if (isDarkMode) {
-        document.body.classList.add('dark-mode');
-        if (themeToggleCheckbox) {
-            themeToggleCheckbox.checked = true;
-        }
+    const embedContent = {
+        title: form.titulo.value,
+        author: form.autor.value,
+        description: form.descripcion.value,
+        image: form.imagen.value,
+        thumbnail: form.thumbnail.value,
+        footer: form.footer.value,
+        footerIcon: form.footerIcon.value
+    };
+
+    embedPreview.style.borderLeftColor = color;
+    document.getElementById('preview-title').textContent = embedContent.title;
+    document.getElementById('preview-author').textContent = embedContent.author;
+    document.getElementById('preview-description').innerHTML = applyMarkdown(embedContent.description);
+    
+    const imageEl = document.getElementById('preview-image');
+    if (embedContent.image) {
+        imageEl.src = embedContent.image;
+        imageEl.style.display = 'block';
+    } else {
+        imageEl.style.display = 'none';
     }
 
-    if (themeToggleCheckbox) {
-        themeToggleCheckbox.addEventListener('change', () => {
-            if (themeToggleCheckbox.checked) {
-                document.body.classList.add('dark-mode');
-                localStorage.setItem('darkMode', 'true');
-            } else {
-                document.body.classList.remove('dark-mode');
-                localStorage.setItem('darkMode', 'false');
+    const thumbnailEl = document.getElementById('preview-thumbnail');
+    const thumbnailImgEl = thumbnailEl.querySelector('img');
+    if (embedContent.thumbnail) {
+        thumbnailImgEl.src = embedContent.thumbnail;
+        thumbnailEl.style.display = 'block';
+    } else {
+        thumbnailEl.style.display = 'none';
+    }
+
+    const footerEl = document.getElementById('preview-footer');
+    const footerTextEl = document.getElementById('preview-footer-text');
+    const footerIconEl = document.getElementById('preview-footer-icon');
+    if (embedContent.footer) {
+        footerTextEl.textContent = embedContent.footer;
+        footerEl.style.display = 'flex';
+    } else {
+        footerEl.style.display = 'none';
+    }
+    if (embedContent.footerIcon) {
+        footerIconEl.src = embedContent.footerIcon;
+        footerIconEl.style.display = 'block';
+    } else {
+        footerIconEl.style.display = 'none';
+    }
+
+    // Actualizar campos adicionales
+    const additionalFields = document.getElementById('additional-fields');
+    const fields = document.getElementById('preview-fields');
+    fields.innerHTML = '';
+    const fieldGroups = additionalFields.querySelectorAll('.field-group');
+    if (fieldGroups.length > 0) {
+        const previewFieldContainer = document.createElement('div');
+        previewFieldContainer.className = 'preview-fields-container';
+        fieldGroups.forEach(group => {
+            const name = group.querySelector('input[name="fieldNames[]"]').value;
+            const value = group.querySelector('input[name="fieldValues[]"]').value;
+            if (name && value) {
+                const fieldEl = document.createElement('div');
+                fieldEl.className = 'embed-preview-field';
+                fieldEl.innerHTML = `
+                    <div class="field-name"><b>${name}</b></div>
+                    <div class="field-value">${applyMarkdown(value)}</div>
+                `;
+                fields.appendChild(fieldEl);
             }
         });
     }
-};
+}
+
+// Escuchar cambios en el formulario para actualizar la previsualización
+if (form) {
+    const formElements = form.querySelectorAll('input, select, textarea');
+    formElements.forEach(element => {
+        element.addEventListener('input', updatePreview);
+    });
+}
+
+function populateFormFromEmbedData(embedData) {
+    if (!form) return;
+    document.getElementById('titulo').value = embedData.titulo || '';
+    document.getElementById('autor').value = embedData.autor || '';
+    document.getElementById('color').value = embedData.color || '#5865f2';
+    document.getElementById('descripcion').value = embedData.descripcion || '';
+    document.getElementById('imagen').value = embedData.imagen || '';
+    document.getElementById('thumbnail').value = embedData.thumbnail || '';
+    document.getElementById('footer').value = embedData.footer || '';
+    document.getElementById('footerIcon').value = embedData.footerIcon || '';
+    document.getElementById('reactionEmoji').value = embedData.reactionEmoji || '';
+
+    additionalFieldsContainer.innerHTML = '';
+    if (embedData.fieldNames && embedData.fieldValues) {
+        for (let i = 0; i < embedData.fieldNames.length; i++) {
+            addField(embedData.fieldNames[i], embedData.fieldValues[i]);
+        }
+    }
+}
+
+document.addEventListener('DOMContentLoaded', loadData);

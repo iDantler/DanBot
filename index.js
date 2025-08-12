@@ -120,9 +120,12 @@ app.get('/api/roles', async (req, res) => {
     }
     try {
         const guild = await client.guilds.fetch(guildId);
-        const roles = guild.roles.cache
-            .filter(r => !r.managed && r.id !== guild.id)
-            .map(r => ({ id: r.id, name: r.name }));
+        const roles = guild.roles.cache.map(role => ({
+            id: role.id,
+            name: role.name,
+            color: role.hexColor,
+            mentionable: role.mentionable
+        }));
         res.json(roles);
     } catch (error) {
         console.error('Error al obtener los roles:', error);
@@ -131,181 +134,279 @@ app.get('/api/roles', async (req, res) => {
 });
 
 app.get('/api/embeds', (req, res) => {
-    res.json(embedsData);
-});
-
-app.get('/api/get-embed/:id', (req, res) => {
-    const embed = embedsData.find(e => e.embedMessageId === req.params.id);
-    if (!embed) {
-        return res.status(404).json({ message: 'Embed no encontrado.' });
-    }
-    res.json(embed);
-});
-
-app.delete('/api/delete-embed/:id', async (req, res) => {
-    const embedIndex = embedsData.findIndex(e => e.embedMessageId === req.params.id);
-    if (embedIndex === -1) {
-        return res.status(404).json({ success: false, message: 'Embed no encontrado.' });
-    }
-
-    const embedToDelete = embedsData[embedIndex];
     try {
-        const channel = await client.channels.fetch(embedToDelete.channelId);
-        const message = await channel.messages.fetch(embedToDelete.embedMessageId);
-        await message.delete();
+        res.json(embedsData);
     } catch (error) {
-        console.log(`El embed con ID ${embedToDelete.embedMessageId} ya no existe en Discord. Solo se eliminará de la lista.`);
+        console.error('Error al obtener los embeds:', error);
+        res.status(500).json({ error: 'No se pudieron obtener los embeds.' });
     }
-
-    embedsData.splice(embedIndex, 1);
-    saveMessageData();
-    res.status(200).json({ success: true, message: 'Embed eliminado con éxito.' });
 });
 
-const createDiscordEmbed = (data) => {
-    const embed = new EmbedBuilder()
-        .setColor(data.color)
-        .setTitle(data.titulo)
-        .setDescription(data.descripcion)
-        .setTimestamp();
-
-    if (data.autor) {
-        embed.setAuthor({ name: data.autor });
-    }
-    if (data.imagen) {
-        embed.setImage(data.imagen);
-    }
-    if (data.pie) {
-        const footerOptions = { text: data.pie };
-        if (data.pieIcono) {
-            footerOptions.iconURL = data.pieIcono;
+// Nueva ruta para obtener un embed específico por su ID
+app.get('/api/get-embed/:messageId', (req, res) => {
+    try {
+        const { messageId } = req.params;
+        const embed = embedsData.find(e => e.embedMessageId === messageId);
+        if (!embed) {
+            return res.status(404).json({ error: 'Embed no encontrado.' });
         }
-        embed.setFooter(footerOptions);
+        res.json(embed);
+    } catch (error) {
+        console.error('Error al obtener el embed:', error);
+        res.status(500).json({ error: 'No se pudo obtener el embed.' });
     }
-    if (data.fieldNames && data.fieldNames.length > 0) {
-        for (let i = 0; i < data.fieldNames.length; i++) {
-            if (data.fieldNames[i] && data.fieldValues[i]) {
-                embed.addFields({ name: data.fieldNames[i], value: data.fieldValues[i], inline: true });
+});
+
+// Ruta corregida para editar un embed
+app.post('/api/edit-embed', async (req, res) => {
+    try {
+        const { embedMessageId, channelId, color, autor, titulo, descripcion, imagen, thumbnail, footer, footerIcon, reactionEmoji, fieldNames, fieldValues } = req.body;
+
+        const embedToEditIndex = embedsData.findIndex(e => e.embedMessageId === embedMessageId);
+        if (embedToEditIndex === -1) {
+            return res.status(404).json({ success: false, message: 'Embed no encontrado.' });
+        }
+
+        const embedToEdit = embedsData[embedToEditIndex];
+        const guild = await client.guilds.fetch(embedToEdit.guildId);
+        const channel = guild.channels.cache.get(channelId);
+
+        if (!channel) {
+            return res.status(404).json({ success: false, message: 'Canal no encontrado.' });
+        }
+
+        const message = await channel.messages.fetch(embedMessageId).catch(() => null);
+        if (!message) {
+            return res.status(404).json({ success: false, message: 'Mensaje de embed no encontrado en Discord.' });
+        }
+
+        const updatedEmbed = new EmbedBuilder()
+            .setTitle(titulo)
+            .setDescription(descripcion)
+            .setColor(parseInt(color.replace('#', '0x'), 16));
+        
+        if (autor && autor.trim().length > 0) {
+            updatedEmbed.setAuthor({ name: autor });
+        }
+
+        if (imagen) {
+            updatedEmbed.setImage(imagen);
+        }
+
+        if (thumbnail) {
+            updatedEmbed.setThumbnail(thumbnail);
+        }
+
+        if (footer || footerIcon) {
+            const footerText = footer && footer.trim().length > 0 ? footer : '';
+            if (footerText || footerIcon) {
+                updatedEmbed.setFooter({
+                    text: footerText,
+                    iconURL: footerIcon || ''
+                });
             }
         }
-    }
-    return embed;
-};
+        
+        const fields = fieldNames.map((name, index) => ({
+            name: name,
+            value: fieldValues[index],
+            inline: true,
+        }));
 
-app.post('/crear-embed', async (req, res) => {
-    try {
-        const data = req.body;
-        if (!data.guildId) {
-            return res.status(400).json({ success: false, message: 'No se ha seleccionado un servidor.' });
+        if (fields.length > 0) {
+            updatedEmbed.addFields(fields);
         }
-        const channel = await client.channels.fetch(data.channelId);
-        const embed = createDiscordEmbed(data);
-        const sentMessage = await channel.send({ embeds: [embed] });
+        
+        await message.edit({ embeds: [updatedEmbed] });
 
-        // Añadir el emoji de reacción
-        if (data.reactionEmoji) {
-            await sentMessage.react(data.reactionEmoji);
+        if (message.reactions) {
+            await message.reactions.removeAll().catch(error => console.error('Error al eliminar reacciones:', error));
+        }
+        if (reactionEmoji) {
+            await message.react(reactionEmoji);
         }
 
-        embedsData.push({
-            guildId: data.guildId,
-            embedMessageId: sentMessage.id,
-            channelId: sentMessage.channel.id,
-            reactionEmoji: data.reactionEmoji,
-            roleId: data.roleId,
-            embedContent: embed.toJSON()
-        });
+        embedsData[embedToEditIndex].embedContent = {
+            color: parseInt(color.replace('#', '0x'), 16),
+            author: autor ? { name: autor } : null,
+            title: titulo,
+            description: descripcion,
+            image: imagen ? { url: imagen } : null,
+            thumbnail: thumbnail ? { url: thumbnail } : null,
+            footer: (footer || footerIcon) ? { text: footer, icon_url: footerIcon } : null,
+            fields: fields,
+        };
+        embedsData[embedToEditIndex].reactionEmoji = reactionEmoji;
+        embedsData[embedToEditIndex].channelId = channelId;
+        embedsData[embedToEditIndex].roleId = req.body.roleId;
+
         saveMessageData();
+        
+        res.json({ success: true, message: 'Embed editado correctamente.' });
 
-        res.status(200).json({ success: true, message: 'Embed creado con éxito!' });
     } catch (error) {
-        console.error('Error al crear el embed desde la web:', error);
-        res.status(500).json({ success: false, message: 'Hubo un error al crear el embed.' });
+        console.error('Error al editar el embed:', error);
+        res.status(500).json({ success: false, message: 'Error al editar el embed.' });
     }
 });
 
-app.post('/api/edit-embed', async (req, res) => {
-    const data = req.body;
-    const embedIndex = embedsData.findIndex(e => e.embedMessageId === data.embedMessageId);
-    if (embedIndex === -1) {
-        return res.status(404).json({ success: false, message: 'Embed no encontrado.' });
-    }
-    
-    data.guildId = embedsData[embedIndex].guildId;
 
+// Ruta corregida para crear un nuevo embed
+app.post('/api/embed', async (req, res) => {
     try {
-        const embedToEdit = embedsData[embedIndex];
-        const channel = await client.channels.fetch(data.channelId);
-        const message = await channel.messages.fetch(embedToEdit.embedMessageId);
+        const { embedMessageId, guildId, channelId, embedData, reactionEmoji, roleId } = req.body;
+        const guild = await client.guilds.fetch(guildId);
+        const channel = guild.channels.cache.get(channelId);
+        if (!channel) {
+            return res.status(404).json({ error: 'Canal no encontrado.' });
+        }
         
-        const newEmbed = createDiscordEmbed(data);
-        await message.edit({ embeds: [newEmbed] });
+        let message;
+        if (embedMessageId) {
+            message = await channel.messages.fetch(embedMessageId).catch(() => null);
+            if (message) {
+                const existingEmbed = message.embeds[0];
+                const updatedEmbed = new EmbedBuilder(existingEmbed).addFields(embedData.fields || []);
+                await message.edit({ embeds: [updatedEmbed] });
+                
+                const embedIndex = embedsData.findIndex(e => e.embedMessageId === embedMessageId);
+                if (embedIndex !== -1) {
+                    embedsData[embedIndex] = { ...embedsData[embedIndex], embedData };
+                }
+                saveMessageData();
+                return res.status(200).json({ message: 'Embed actualizado correctamente.', embedMessageId });
+            }
+        }
+        
+        const newEmbed = new EmbedBuilder()
+            .setTitle(embedData.title)
+            .setDescription(embedData.description)
+            // LÍNEA CORREGIDA: Se convierte el color de string a número.
+            .setColor(parseInt(embedData.color.replace('#', '0x'), 16));
 
-        embedsData[embedIndex] = {
-            guildId: data.guildId,
-            embedMessageId: embedToEdit.embedMessageId,
-            channelId: data.channelId,
-            reactionEmoji: data.reactionEmoji,
-            roleId: data.roleId,
-            embedContent: newEmbed.toJSON()
-        };
-        saveMessageData();
-        
-        if (data.reactionEmoji !== embedToEdit.reactionEmoji) {
-            await message.reactions.removeAll();
-            await message.react(data.reactionEmoji);
+        if (embedData.author && embedData.author.name) {
+            newEmbed.setAuthor({ name: embedData.author.name });
+        }
+        if (embedData.image && embedData.image.url) {
+            newEmbed.setImage(embedData.image.url);
+        }
+        if (embedData.thumbnail && embedData.thumbnail.url) {
+            newEmbed.setThumbnail(embedData.thumbnail.url);
         }
 
-        res.status(200).json({ success: true, message: 'Embed editado con éxito.' });
+        if (embedData.footer && (embedData.footer.text || embedData.footer.icon_url)) {
+            newEmbed.setFooter({
+                text: embedData.footer.text || '',
+                iconURL: embedData.footer.icon_url || ''
+            });
+        }
+
+        if (embedData.fields && embedData.fields.length > 0) {
+            newEmbed.addFields(embedData.fields);
+        }
+        
+        const sentMessage = await channel.send({ embeds: [newEmbed] });
+        if (reactionEmoji) {
+            await sentMessage.react(reactionEmoji);
+        }
+        
+        const newEmbedEntry = {
+            guildId,
+            embedMessageId: sentMessage.id,
+            channelId,
+            reactionEmoji,
+            roleId,
+            embedContent: embedData
+        };
+        embedsData.push(newEmbedEntry);
+        saveMessageData();
+        
+        res.status(200).json({ message: 'Embed enviado correctamente.', embedMessageId: sentMessage.id });
+
     } catch (error) {
-        console.error('Error al editar el embed:', error);
-        res.status(500).json({ success: false, message: 'Hubo un error al editar el embed.' });
+        console.error('Error al crear/editar el embed:', error);
+        res.status(500).json({ error: 'No se pudo crear/editar el embed.' });
+    }
+});
+
+app.delete('/api/embed/:messageId', async (req, res) => {
+    const { messageId } = req.params;
+    try {
+        const embedEntry = embedsData.find(e => e.embedMessageId === messageId);
+        if (!embedEntry) {
+            return res.status(404).json({ error: 'Embed no encontrado en los datos locales.' });
+        }
+
+        const { guildId, channelId } = embedEntry;
+
+        const guild = await client.guilds.fetch(guildId);
+        const channel = guild.channels.cache.get(channelId);
+        if (!channel) {
+            embedsData = embedsData.filter(e => e.embedMessageId !== messageId);
+            saveMessageData();
+            return res.status(200).json({ message: 'Embed eliminado de los datos locales (canal no encontrado).' });
+        }
+
+        const message = await channel.messages.fetch(messageId).catch(() => null);
+        if (message) {
+            await message.delete();
+        }
+
+        embedsData = embedsData.filter(e => e.embedMessageId !== messageId);
+        saveMessageData();
+
+        res.status(200).json({ message: 'Embed eliminado correctamente.' });
+
+    } catch (error) {
+        console.error('Error al eliminar el embed:', error);
+        res.status(500).json({ error: 'No se pudo eliminar el embed.' });
     }
 });
 
 client.on('messageReactionAdd', async (reaction, user) => {
     if (user.bot) return;
-    if (reaction.partial) await reaction.fetch();
-    
-    // Buscar el embed por el ID del mensaje
-    const embed = embedsData.find(e => e.embedMessageId === reaction.message.id);
-    
-    // Comprobar si el emoji de la reacción es el correcto
-    if (!embed || reaction.emoji.name !== embed.reactionEmoji) return;
-    
-    try {
-        const member = await reaction.message.guild.members.fetch(user.id);
-        const role = reaction.message.guild.roles.cache.get(embed.roleId);
-        if (role) {
-            await member.roles.add(role);
-            console.log(`Rol ${role.name} asignado a ${member.user.tag}`);
+
+    if (reaction.partial) {
+        try {
+            await reaction.fetch();
+        } catch (error) {
+            console.error('Error al hacer fetch a la reacción:', error);
+            return;
         }
-    } catch (error) {
-        console.error('Error al añadir el rol:', error);
+    }
+
+    const embedEntry = embedsData.find(e => e.embedMessageId === reaction.message.id && e.reactionEmoji === reaction.emoji.name);
+    if (embedEntry) {
+        const guild = reaction.message.guild;
+        const member = await guild.members.fetch(user.id);
+        const role = guild.roles.cache.get(embedEntry.roleId);
+        if (role && member) {
+            await member.roles.add(role).catch(console.error);
+        }
     }
 });
 
 client.on('messageReactionRemove', async (reaction, user) => {
     if (user.bot) return;
-    if (reaction.partial) await reaction.fetch();
-    
-    // Buscar el embed por el ID del mensaje
-    const embed = embedsData.find(e => e.embedMessageId === reaction.message.id);
-    
-    // Comprobar si el emoji de la reacción es el correcto
-    if (!embed || reaction.emoji.name !== embed.reactionEmoji) return;
-    
-    try {
-        const member = await reaction.message.guild.members.fetch(user.id);
-        const role = reaction.message.guild.roles.cache.get(embed.roleId);
-        if (role) {
-            await member.roles.remove(role);
-            console.log(`Rol ${role.name} quitado a ${member.user.tag}`);
+
+    if (reaction.partial) {
+        try {
+            await reaction.fetch();
+        } catch (error) {
+            console.error('Error al hacer fetch a la reacción:', error);
+            return;
         }
-    } catch (error) {
-        console.error('Error al quitar el rol:', error);
+    }
+
+    const embedEntry = embedsData.find(e => e.embedMessageId === reaction.message.id && e.reactionEmoji === reaction.emoji.name);
+    if (embedEntry) {
+        const guild = reaction.message.guild;
+        const member = await guild.members.fetch(user.id);
+        const role = guild.roles.cache.get(embedEntry.roleId);
+        if (role && member) {
+            await member.roles.remove(role).catch(console.error);
+        }
     }
 });
 
-client.login(process.env.DISCORD_BOT_TOKEN,
-);
+client.login(process.env.DISCORD_BOT_TOKEN);

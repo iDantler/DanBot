@@ -78,61 +78,54 @@
                         <label for="imagen">URL de la Imagen</label>
                         <input type="url" id="imagen" name="imagen" placeholder="URL de la imagen principal">
                     </div>
+                    <div class="form-row">
+                        <label for="thumbnail">URL de la Miniatura (Thumbnail)</label>
+                        <input type="url" id="thumbnail" name="thumbnail" placeholder="URL de la miniatura">
+                    </div>
+                    <div class="form-row">
+                        <label for="footer">Texto del Pie de Página (Footer)</label>
+                        <input type="text" id="footer" name="footer" placeholder="Texto en el pie de página">
+                    </div>
+                    <div class="form-row">
+                        <label for="footerIcon">URL del Icono del Pie de Página</label>
+                        <input type="url" id="footerIcon" name="footerIcon" placeholder="URL del icono del pie de página">
+                    </div>
+                    
                     <hr>
-                    <div class="form-row">
-                        <label>Campos Adicionales</label>
-                        <div id="additional-fields"></div>
-                        <button type="button" class="add-field-button" onclick="addField()"><i class="fas fa-plus"></i> Añadir Campo</button>
+                    <label>Campos Adicionales</label>
+                    <div id="additional-fields">
+                        <p class="text-muted" id="no-fields-message">No hay campos adicionales.</p>
                     </div>
-                    <hr>
-                    <div class="form-row">
-                        <label for="pie">Pie de página</label>
-                        <input type="text" id="pie" name="pie" placeholder="Texto del pie de página">
-                    </div>
-                    <div class="form-row">
-                        <label for="pieIcono">URL de Ícono para el pie</label>
-                        <input type="url" id="pieIcono" name="pieIcono" placeholder="URL del ícono pequeño">
-                    </div>
-                    <button type="submit" id="save-button" class="submit-button">Guardar Cambios</button>
+                    <button type="button" class="add-field-button" onclick="addField()"><i class="fas fa-plus"></i> Añadir Campo</button>
+
+                    <button type="submit" id="submit-button" class="submit-button">Guardar Cambios</button>
                     <p id="status-message" class="status-message"></p>
                 </form>
+                <div class="action-buttons">
+                    <button type="button" class="duplicate-button" onclick="duplicateEmbedInEdit()"><i class="fas fa-copy"></i> Duplicar</button>
+                </div>
             </div>
-
+            
             <div class="preview-container">
-                <h3>Vista Previa</h3>
+                <h3>Previsualización del Embed</h3>
                 <div class="embed-preview" id="embed-preview">
+                    <div class="embed-preview-author" id="preview-author"></div>
+                    <div class="embed-preview-title" id="preview-title"></div>
+                    <div class="embed-preview-description" id="preview-description"></div>
+                    <div class="embed-preview-fields" id="preview-fields"></div>
+                    <img class="embed-preview-image" id="preview-image" src="" style="display: none;">
+                    <div class="embed-preview-thumbnail" id="preview-thumbnail" style="display: none;">
+                        <img src="" alt="Miniatura">
+                    </div>
+                    <div class="embed-preview-footer" id="preview-footer">
+                        <img id="preview-footer-icon" src="" style="display: none;">
+                        <span id="preview-footer-text"></span>
+                    </div>
                 </div>
             </div>
         </section>
     </main>
 
     <script src="/js/edit.js"></script>
-    
-    <script>
-    // Lógica para el cambio de tema
-    const themeToggleCheckbox = document.getElementById('theme-toggle-checkbox');
-    const isDarkMode = localStorage.getItem('darkMode') === 'true';
-
-    // Aplicar el tema guardado al cargar la página
-    if (isDarkMode) {
-        document.body.classList.add('dark-mode');
-        if (themeToggleCheckbox) {
-            themeToggleCheckbox.checked = true;
-        }
-    }
-
-    // Escuchar el evento de cambio en el checkbox
-    if (themeToggleCheckbox) {
-        themeToggleCheckbox.addEventListener('change', () => {
-            if (themeToggleCheckbox.checked) {
-                document.body.classList.add('dark-mode');
-                localStorage.setItem('darkMode', 'true');
-            } else {
-                document.body.classList.remove('dark-mode');
-                localStorage.setItem('darkMode', 'false');
-            }
-        });
-    }
-    </script>
 </body>
 </html>

@@ -25,11 +25,61 @@ body.dark-mode .navigation li a.active {
     color: #ffffff;
 }
 
-body.dark-mode .embed-item:hover {
+body.dark-mode .form-row input,
+body.dark-mode .form-row select,
+body.dark-mode .form-row textarea {
+    background-color: #36393f;
+    border-color: #202225;
+    color: #dcddde;
+}
+
+body.dark-mode .submit-button {
+    background-color: var(--primary-color);
+    color: #ffffff;
+}
+
+body.dark-mode .submit-button:hover {
+    background-color: #4b54ce;
+}
+
+body.dark-mode .submit-button:disabled {
+    background-color: var(--secondary-color);
+    color: var(--text-muted);
+}
+
+body.dark-mode .add-field-button {
+    background-color: var(--secondary-color);
+    color: var(--text-color);
+}
+
+body.dark-mode .add-field-button:hover {
     background-color: #454950;
 }
 
-body.dark-mode .add-field-button,
 body.dark-mode .remove-field-button {
+    background-color: #992d22;
     color: #ffffff;
+}
+
+body.dark-mode .remove-field-button:hover {
+    background-color: #c0392b;
+}
+
+body.dark-mode .embed-preview {
+    background-color: #36393f;
+}
+
+body.dark-mode .status-message.confirmation {
+    background-color: rgba(46, 204, 113, 0.2);
+}
+body.dark-mode .status-message.error {
+    background-color: rgba(231, 76, 60, 0.2);
+}
+
+body.dark-mode .duplicate-button {
+    background-color: #d35400;
+}
+
+body.dark-mode .duplicate-button:hover {
+    background-color: #e67e22;
 }
