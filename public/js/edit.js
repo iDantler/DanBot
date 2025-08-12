@@ -1,370 +1,463 @@
-document.addEventListener('DOMContentLoaded', async () => {
-    let selectedGuildId = localStorage.getItem('selectedGuildId');
-    const navCreate = document.getElementById('nav-create');
-    const navView = document.getElementById('nav-view');
-    const serverProfile = document.getElementById('server-profile');
-    const serverDropdown = document.getElementById('server-dropdown');
-    const serverIcon = document.getElementById('server-icon');
-    const serverName = document.getElementById('server-name');
-    const serverInitialIcon = document.getElementById('server-initial-icon');
-    const form = document.getElementById('edit-embed-form');
-    const statusMessage = document.getElementById('status-message');
-    const previewContainer = document.getElementById('embed-preview');
-    const additionalFieldsContainer = document.getElementById('additional-fields');
-    const channelSelect = document.getElementById('channel-select');
-    const roleSelect = document.getElementById('role-select');
-    const themeToggleCheckbox = document.getElementById('theme-toggle-checkbox');
-    const reactionEmojiInput = document.getElementById('reactionEmoji');
+let selectedGuildId = localStorage.getItem('selectedGuildId');
 
-    const isDarkMode = localStorage.getItem('darkMode') === 'true';
-    if (isDarkMode) {
-        document.body.classList.add('dark-mode');
-        if (themeToggleCheckbox) {
-            themeToggleCheckbox.checked = true;
-        }
-    }
+const serverProfile = document.getElementById('server-profile');
+const serverDropdown = document.getElementById('server-dropdown');
+const serverIcon = document.getElementById('server-icon');
+const serverName = document.getElementById('server-name');
+const serverInitialIcon = document.getElementById('server-initial-icon');
+const form = document.getElementById('edit-embed-form');
+const statusMessage = document.getElementById('status-message');
+const additionalFieldsContainer = document.getElementById('additional-fields');
+const channelSelect = document.getElementById('channel-select');
+const roleSelect = document.getElementById('role-select');
+const navCreate = document.getElementById('nav-create');
+const navView = document.getElementById('nav-view');
+const themeToggleCheckbox = document.getElementById('theme-toggle-checkbox');
+const embedMessageIdInput = document.getElementById('embed-message-id');
+const submitButton = document.getElementById('submit-button');
 
+// Lógica para el cambio de tema
+const isDarkMode = localStorage.getItem('darkMode') === 'true';
+if (isDarkMode) {
+    document.body.classList.add('dark-mode');
     if (themeToggleCheckbox) {
-        themeToggleCheckbox.addEventListener('change', () => {
-            if (themeToggleCheckbox.checked) {
-                document.body.classList.add('dark-mode');
-                localStorage.setItem('darkMode', 'true');
-            } else {
-                document.body.classList.remove('dark-mode');
-                localStorage.setItem('darkMode', 'false');
-            }
-        });
+        themeToggleCheckbox.checked = true;
     }
-
-    if (navCreate && navView) {
-        navCreate.addEventListener('click', (e) => {
-            e.preventDefault();
-            window.location.href = '/';
-        });
-
-        navView.addEventListener('click', (e) => {
-            e.preventDefault();
-            window.location.href = '/embeds';
-        });
-    }
-
-    if (serverProfile) {
-        serverProfile.addEventListener('click', () => {
-            serverDropdown.style.display = serverDropdown.style.display === 'block' ? 'none' : 'block';
-        });
-    }
-
-    document.addEventListener('click', (e) => {
-        if (serverProfile && !serverProfile.contains(e.target)) {
-            serverDropdown.style.display = 'none';
+}
+if (themeToggleCheckbox) {
+    themeToggleCheckbox.addEventListener('change', () => {
+        if (themeToggleCheckbox.checked) {
+            document.body.classList.add('dark-mode');
+            localStorage.setItem('darkMode', 'true');
+        } else {
+            document.body.classList.remove('dark-mode');
+            localStorage.setItem('darkMode', 'false');
         }
     });
+}
 
-    window.addField = function(name = '', value = '') {
-        if (!additionalFieldsContainer) return;
-        const newField = document.createElement('div');
-        newField.className = 'field-group';
-        newField.innerHTML = `
-            <input type="text" name="fieldNames[]" placeholder="Nombre del Campo" value="${name}">
-            <input type="text" name="fieldValues[]" placeholder="Valor del Campo" value="${value}">
-            <button type="button" onclick="this.parentElement.remove(); updatePreview();" class="remove-field-button"><i class="fas fa-times"></i></button>
-        `;
-        additionalFieldsContainer.appendChild(newField);
-    };
+if (serverProfile) {
+    serverProfile.addEventListener('click', () => {
+        serverDropdown.style.display = serverDropdown.style.display === 'block' ? 'none' : 'block';
+    });
+}
 
-    function generateColor(name) {
-        let hash = 0;
-        if (!name) return '#5865f2';
-        for (let i = 0; i < name.length; i++) {
-            hash = name.charCodeAt(i) + ((hash << 5) - hash);
-        }
-        const c = (hash & 0x00FFFFFF)
-            .toString(16)
-            .toUpperCase();
-        return '#' + '00000'.substring(0, 6 - c.length) + c;
+document.addEventListener('click', (e) => {
+    if (serverProfile && !serverProfile.contains(e.target)) {
+        serverDropdown.style.display = 'none';
     }
+});
 
-    function updateProfileIcon(name, iconUrl) {
-        if (serverName) serverName.textContent = name;
-        if (iconUrl) {
-            if (serverIcon) serverIcon.src = iconUrl;
-            if (serverIcon) serverIcon.style.display = 'block';
-            if (serverInitialIcon) serverInitialIcon.style.display = 'none';
-        } else {
-            if (serverInitialIcon) serverInitialIcon.textContent = name ? name.charAt(0).toUpperCase() : '?';
-            if (serverInitialIcon) serverInitialIcon.style.backgroundColor = generateColor(name);
-            if (serverIcon) serverIcon.style.display = 'none';
-            if (serverInitialIcon) serverInitialIcon.style.display = 'flex';
-        }
+function generateColor(name) {
+    let hash = 0;
+    if (!name) return '#5865f2';
+    for (let i = 0; i < name.length; i++) {
+        hash = name.charCodeAt(i) + ((hash << 5) - hash);
     }
+    const c = (hash & 0x00FFFFFF)
+        .toString(16)
+        .toUpperCase();
+    return '#' + '00000'.substring(0, 6 - c.length) + c;
+}
 
-    async function loadData() {
-        try {
-            const guildsResponse = await fetch('/api/guilds');
-            const guilds = await guildsResponse.json();
+function updateProfileIcon(name, iconUrl) {
+    if (serverName) serverName.textContent = name;
+    if (iconUrl) {
+        if (serverIcon) serverIcon.src = iconUrl;
+        if (serverIcon) serverIcon.style.display = 'block';
+        if (serverInitialIcon) serverInitialIcon.style.display = 'none';
+    } else {
+        if (serverInitialIcon) serverInitialIcon.textContent = name ? name.charAt(0).toUpperCase() : '?';
+        if (serverInitialIcon) serverInitialIcon.style.backgroundColor = generateColor(name);
+        if (serverIcon) serverIcon.style.display = 'none';
+        if (serverInitialIcon) serverInitialIcon.style.display = 'flex';
+    }
+}
 
-            if (serverDropdown) {
-                serverDropdown.innerHTML = '';
-                guilds.forEach(g => {
-                    const li = document.createElement('li');
-                    li.dataset.guildId = g.id;
-                    const iconHtml = g.iconURL 
-                        ? `<img src="${g.iconURL}" alt="Icono del servidor">`
-                        : `<div class="server-initial-icon-dropdown" style="background-color: ${generateColor(g.name)};">${g.name.charAt(0).toUpperCase()}</div>`;
-                    li.innerHTML = `${iconHtml}<span>${g.name}</span>`;
-                    li.addEventListener('click', () => {
-                        selectGuild(g.id, g.name, g.iconURL);
-                        serverDropdown.style.display = 'none';
-                    });
-                    serverDropdown.appendChild(li);
+async function loadData() {
+    try {
+        const guildsResponse = await fetch('/api/guilds');
+        const guilds = await guildsResponse.json();
+
+        if (serverDropdown) {
+            serverDropdown.innerHTML = '';
+            guilds.forEach(g => {
+                const li = document.createElement('li');
+                li.dataset.guildId = g.id;
+                const iconHtml = g.iconURL 
+                    ? `<img src="${g.iconURL}" alt="Icono del servidor">`
+                    : `<div class="server-initial-icon-dropdown" style="background-color: ${generateColor(g.name)};">${g.name.charAt(0).toUpperCase()}</div>`;
+                li.innerHTML = `${iconHtml}<span>${g.name}</span>`;
+                li.addEventListener('click', () => {
+                    selectGuild(g.id, g.name, g.iconURL);
+                    serverDropdown.style.display = 'none';
                 });
-            }
-
-            if (selectedGuildId) {
-                const selectedGuild = guilds.find(g => g.id === selectedGuildId);
-                if (selectedGuild) {
-                    selectGuild(selectedGuild.id, selectedGuild.name, selectedGuild.iconURL);
-                } else {
-                    selectedGuildId = null;
-                    localStorage.removeItem('selectedGuildId');
-                    if (serverName) serverName.textContent = 'Selecciona un servidor';
-                    updateProfileIcon('?', null);
-                    if (channelSelect) channelSelect.disabled = true;
-                    if (roleSelect) roleSelect.disabled = true;
-                    if (document.getElementById('submit-button')) document.getElementById('submit-button').disabled = true;
-                }
+                serverDropdown.appendChild(li);
+            });
+        }
+        
+        if (selectedGuildId) {
+            const selectedGuild = guilds.find(g => g.id === selectedGuildId);
+            if (selectedGuild) {
+                selectGuild(selectedGuild.id, selectedGuild.name, selectedGuild.iconURL);
             } else {
-                if (channelSelect) channelSelect.disabled = true;
-                if (roleSelect) roleSelect.disabled = true;
-                if (document.getElementById('submit-button')) document.getElementById('submit-button').disabled = true;
+                selectedGuildId = null;
+                localStorage.removeItem('selectedGuildId');
                 if (serverName) serverName.textContent = 'Selecciona un servidor';
                 updateProfileIcon('?', null);
+                if (channelSelect) channelSelect.disabled = true;
+                if (roleSelect) roleSelect.disabled = true;
+                if (submitButton) submitButton.disabled = true;
             }
-        } catch (error) {
-            console.error('Error al cargar datos:', error);
-            if (serverName) serverName.textContent = 'Error';
+        } else {
+            if (channelSelect) channelSelect.disabled = true;
+            if (roleSelect) roleSelect.disabled = true;
+            if (submitButton) submitButton.disabled = true;
+            if (serverName) serverName.textContent = 'Selecciona un servidor';
             updateProfileIcon('?', null);
         }
+    } catch (error) {
+        console.error('Error al cargar datos:', error);
+        if (serverName) serverName.textContent = 'Error';
+        updateProfileIcon('?', null);
     }
+}
 
-    async function selectGuild(guildId, guildName, guildIcon) {
-        selectedGuildId = guildId;
-        localStorage.setItem('selectedGuildId', selectedGuildId);
-        if (serverName) serverName.textContent = guildName;
-        updateProfileIcon(guildName, guildIcon);
-        await loadChannelsAndRoles(guildId);
+async function selectGuild(guildId, guildName, guildIcon) {
+    selectedGuildId = guildId;
+    localStorage.setItem('selectedGuildId', selectedGuildId);
+    if (serverName) serverName.textContent = guildName;
+    updateProfileIcon(guildName, guildIcon);
+    await loadChannelsAndRoles(guildId);
+}
+
+async function loadChannelsAndRoles(guildId) {
+    if (channelSelect && roleSelect) {
+        channelSelect.disabled = false;
+        roleSelect.disabled = false;
+        if (submitButton) submitButton.disabled = false;
     }
-
-    async function loadChannelsAndRoles(guildId) {
-        if (channelSelect && roleSelect) {
-            channelSelect.disabled = false;
-            roleSelect.disabled = false;
-            if (document.getElementById('submit-button')) document.getElementById('submit-button').disabled = false;
-        }
-
-        const channelIdToSelect = channelSelect.value;
-        const roleIdToSelect = roleSelect.value;
-
-        if (channelSelect) {
-            try {
-                const response = await fetch(`/api/channels?guildId=${guildId}`);
-                if (!response.ok) throw new Error('Error al cargar los canales');
-                const channels = await response.json();
-                channelSelect.innerHTML = '<option value="">Selecciona un canal</option>';
-                channels.forEach(c => {
-                    const option = document.createElement('option');
-                    option.value = c.id;
-                    option.textContent = `#${c.name}`;
-                    channelSelect.appendChild(option);
-                });
-                if (channelIdToSelect) {
-                    channelSelect.value = channelIdToSelect;
-                }
-            } catch (error) {
-                console.error(error);
-                channelSelect.innerHTML = '<option value="">Error al cargar canales</option>';
-            }
-        }
-
-        if (roleSelect) {
-            try {
-                const response = await fetch(`/api/roles?guildId=${guildId}`);
-                if (!response.ok) throw new Error('Error al cargar los roles');
-                const roles = await response.json();
-                roleSelect.innerHTML = '<option value="">Selecciona un rol</option>';
-                roles.forEach(r => {
-                    const option = document.createElement('option');
-                    option.value = r.id;
-                    option.textContent = r.name;
-                    roleSelect.appendChild(option);
-                });
-                if (roleIdToSelect) {
-                    roleSelect.value = roleIdToSelect;
-                }
-            } catch (error) {
-                console.error(error);
-                roleSelect.innerHTML = '<option value="">Error al cargar roles</option>';
-            }
+    
+    if (channelSelect) {
+        try {
+            const response = await fetch(`/api/channels?guildId=${guildId}`);
+            if (!response.ok) throw new Error('Error al cargar los canales');
+            const channels = await response.json();
+            channelSelect.innerHTML = '<option value="">Selecciona un canal</option>';
+            channels.forEach(c => {
+                const option = document.createElement('option');
+                option.value = c.id;
+                option.textContent = `#${c.name}`;
+                channelSelect.appendChild(option);
+            });
+        } catch (error) {
+            console.error(error);
+            channelSelect.innerHTML = '<option value="">Error al cargar canales</option>';
         }
     }
+    
+    if (roleSelect) {
+        try {
+            const response = await fetch(`/api/roles?guildId=${guildId}`);
+            if (!response.ok) throw new Error('Error al cargar los roles');
+            const roles = await response.json();
+            roleSelect.innerHTML = '<option value="">No asignar</option>';
+            roles.forEach(r => {
+                const option = document.createElement('option');
+                option.value = r.id;
+                option.textContent = r.name;
+                roleSelect.appendChild(option);
+            });
+        } catch (error) {
+            console.error(error);
+            roleSelect.innerHTML = '<option value="">Error al cargar roles</option>';
+        }
+    }
+}
 
-    function applyMarkdown(text) {
-        if (!text) return '';
-        let formattedText = text;
-        formattedText = formattedText.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
-        formattedText = formattedText.replace(/\*(.*?)\*/g, '<i>$1</i>');
-        formattedText = formattedText.replace(/__(.*?)__/g, '<u>$1</u>');
-        formattedText = formattedText.replace(/~~(.*?)~~/g, '<del>$1</del>');
-        return formattedText;
+window.addField = function(name = '', value = '') {
+    if (!additionalFieldsContainer) return;
+    const noFieldsMessage = document.getElementById('no-fields-message');
+    if (noFieldsMessage) noFieldsMessage.style.display = 'none';
+    
+    const newField = document.createElement('div');
+    newField.className = 'field-group';
+    newField.innerHTML = `
+        <input type="text" name="fieldNames[]" placeholder="Nombre del Campo" value="${name}">
+        <input type="text" name="fieldValues[]" placeholder="Valor del Campo" value="${value}">
+        <button type="button" onclick="this.parentElement.remove(); updatePreview();" class="remove-field-button"><i class="fas fa-times"></i></button>
+    `;
+    additionalFieldsContainer.appendChild(newField);
+};
+
+function applyMarkdown(text) {
+    if (!text) return '';
+    let formattedText = text;
+    formattedText = formattedText.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
+    formattedText = formattedText.replace(/\*(.*?)\*/g, '<i>$1</i>');
+    formattedText = formattedText.replace(/__(.*?)__/g, '<u>$1</u>');
+    formattedText = formattedText.replace(/~~(.*?)~~/g, '<del>$1</del>');
+    return formattedText;
+}
+
+function updatePreview() {
+    if (!form) return;
+
+    const embedPreview = document.getElementById('embed-preview');
+    const color = form.color.value || '#5865f2';
+    
+    embedPreview.style.borderLeftColor = color;
+    
+    const previewAuthor = document.getElementById('preview-author');
+    previewAuthor.textContent = form.autor.value;
+    previewAuthor.style.display = form.autor.value ? 'block' : 'none';
+
+    const previewTitle = document.getElementById('preview-title');
+    previewTitle.textContent = form.titulo.value;
+    previewTitle.style.display = form.titulo.value ? 'block' : 'none';
+
+    const previewDescription = document.getElementById('preview-description');
+    previewDescription.innerHTML = applyMarkdown(form.descripcion.value);
+    previewDescription.style.display = form.descripcion.value ? 'block' : 'none';
+    
+    const imageEl = document.getElementById('preview-image');
+    if (form.imagen.value) {
+        imageEl.src = form.imagen.value;
+        imageEl.style.display = 'block';
+    } else {
+        imageEl.style.display = 'none';
     }
 
-    function updatePreview() {
-        if (!form || !previewContainer) return;
+    const thumbnailEl = document.getElementById('preview-thumbnail');
+    const thumbnailImgEl = thumbnailEl.querySelector('img');
+    if (form.thumbnail.value) {
+        thumbnailImgEl.src = form.thumbnail.value;
+        thumbnailEl.style.display = 'block';
+    } else {
+        thumbnailEl.style.display = 'none';
+    }
 
-        const color = form.color?.value || '#5865f2';
-        const autor = form.autor?.value || '';
-        const titulo = form.titulo?.value || '';
-        const descripcion = form.descripcion?.value || '';
-        const imagen = form.imagen?.value || '';
-        const thumbnail = form.thumbnail?.value || '';
-        const footer = form.footer?.value || '';
-        const footerIcon = form.footerIcon?.value || '';
+    const footerEl = document.getElementById('preview-footer');
+    const footerTextEl = document.getElementById('preview-footer-text');
+    const footerIconEl = document.getElementById('preview-footer-icon');
+    if (form.footer.value) {
+        footerTextEl.textContent = form.footer.value;
+        footerEl.style.display = 'flex';
+    } else {
+        footerEl.style.display = 'none';
+    }
+    if (form.footerIcon.value) {
+        footerIconEl.src = form.footerIcon.value;
+        footerIconEl.style.display = 'block';
+    } else {
+        footerIconEl.style.display = 'none';
+    }
 
-        let fieldsHtml = '';
-        const fieldNames = form.querySelectorAll('input[name="fieldNames[]"]');
-        const fieldValues = form.querySelectorAll('input[name="fieldValues[]"]');
-        for (let i = 0; i < fieldNames.length; i++) {
-            if (fieldNames[i].value && fieldValues[i].value) {
-                fieldsHtml += `
-                    <div class="embed-preview-field">
-                        <div class="embed-preview-field-name">${applyMarkdown(fieldNames[i].value)}</div>
-                        <div class="embed-preview-field-value">${applyMarkdown(fieldValues[i].value)}</div>
-                    </div>
+    // Actualizar campos adicionales
+    const fields = document.getElementById('preview-fields');
+    fields.innerHTML = '';
+    const fieldGroups = additionalFieldsContainer.querySelectorAll('.field-group');
+    if (fieldGroups.length > 0) {
+        fieldGroups.forEach(group => {
+            const name = group.querySelector('input[name="fieldNames[]"]').value;
+            const value = group.querySelector('input[name="fieldValues[]"]').value;
+            if (name && value) {
+                const fieldEl = document.createElement('div');
+                fieldEl.className = 'embed-preview-field';
+                fieldEl.innerHTML = `
+                    <div class="field-name"><b>${name}</b></div>
+                    <div class="field-value">${applyMarkdown(value)}</div>
                 `;
-            }
-        }
-
-        previewContainer.style.setProperty('--embed-color', color);
-        
-        const hasFooterContent = (footer && footer.trim().length > 0) || (footerIcon && footerIcon.trim().length > 0);
-        const hasImage = imagen && imagen.trim().length > 0;
-        const hasThumbnail = thumbnail && thumbnail.trim().length > 0;
-
-        previewContainer.innerHTML = `
-            ${autor ? `<div class="embed-preview-author">${applyMarkdown(autor)}</div>` : ''}
-            ${titulo ? `<div class="embed-preview-title">${applyMarkdown(titulo)}</div>` : ''}
-            ${descripcion ? `<div class="embed-preview-description">${applyMarkdown(descripcion).replace(/\n/g, '<br>')}</div>` : ''}
-            ${hasThumbnail ? `<div class="embed-preview-thumbnail"><img src="${thumbnail}" alt="Miniatura"></div>` : ''}
-            ${fieldsHtml ? `<div class="embed-preview-fields">${fieldsHtml}</div>` : ''}
-            ${hasImage ? `<img class="embed-preview-image" src="${imagen}" alt="Imagen del embed">` : ''}
-            ${hasFooterContent ? `<div class="embed-preview-footer">
-                ${footerIcon ? `<img src="${footerIcon}" alt="Icono del pie">` : ''}
-                ${footer ? applyMarkdown(footer) : ''}
-            </div>` : ''}
-        `;
-    }
-
-    if (form) {
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const formData = new FormData(form);
-            const data = Object.fromEntries(formData.entries());
-            data.embedMessageId = new URLSearchParams(window.location.search).get('id');
-
-            const fieldNames = formData.getAll('fieldNames[]');
-            const fieldValues = formData.getAll('fieldValues[]');
-            data.fieldNames = fieldNames;
-            data.fieldValues = fieldValues;
-
-            if (statusMessage) {
-                statusMessage.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Editando embed...`;
-                statusMessage.className = 'status-message info';
-            }
-
-            try {
-                const response = await fetch('/api/edit-embed', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(data)
-                });
-                const result = await response.json();
-                if (statusMessage) {
-                    if (result.success) {
-                        statusMessage.innerHTML = `<i class="fas fa-check-circle"></i> ${result.message}`;
-                        statusMessage.className = 'status-message confirmation';
-                        updatePreview();
-                    } else {
-                        statusMessage.innerHTML = `<i class="fas fa-exclamation-triangle"></i> ${result.message}`;
-                        statusMessage.className = 'status-message error';
-                    }
-                }
-            } catch (error) {
-                if (statusMessage) {
-                    statusMessage.innerHTML = `<i class="fas fa-exclamation-triangle"></i> Ocurrió un error de conexión.`;
-                    statusMessage.className = 'status-message error';
-                }
-                console.error('Error:', error);
+                fields.appendChild(fieldEl);
             }
         });
-        form.addEventListener('input', updatePreview);
+    }
+}
+
+window.duplicateEmbedInEdit = function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const messageId = urlParams.get('id');
+    const embedIdInput = document.getElementById('embed-message-id');
+    const submitBtn = document.getElementById('submit-button');
+
+    if (messageId) {
+        // Redirige a la misma página con el parámetro 'duplicate=true'
+        window.location.href = `/edit?id=${messageId}&duplicate=true`;
+    }
+};
+
+// Cargar los datos del embed a editar
+async function loadEmbedToEdit() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const messageId = urlParams.get('id');
+    const isDuplicating = urlParams.get('duplicate') === 'true';
+
+    if (!messageId) {
+        document.querySelector('#edit-embed-section h3').textContent = 'Error: ID de embed no encontrado.';
+        form.style.display = 'none';
+        return;
     }
 
-    const embedId = new URLSearchParams(window.location.search).get('id');
-    if (embedId) {
-        try {
-            const response = await fetch(`/api/get-embed/${embedId}`);
-            if (!response.ok) throw new Error('Embed no encontrado.');
-            const embed = await response.json();
-            
-            if (embed.embedContent) {
-                const embedContent = embed.embedContent;
-                
-                if (form.color) form.color.value = `#${(embedContent.color || 0).toString(16).padStart(6, '0')}`;
-                if (form.autor) form.autor.value = embedContent.author?.name || '';
-                if (form.titulo) form.titulo.value = embedContent.title || '';
-                if (form.descripcion) form.descripcion.value = embedContent.description || '';
-                
-                if (form.imagen) form.imagen.value = embedContent.image?.url || '';
-                if (form.thumbnail) form.thumbnail.value = embedContent.thumbnail?.url || '';
+    try {
+        const response = await fetch(`/api/get-embed/${messageId}`);
+        if (!response.ok) throw new Error('Embed no encontrado.');
+        const embedData = await response.json();
+        
+        // Cargar los datos en el formulario
+        document.getElementById('titulo').value = embedData.embedContent.title || '';
+        document.getElementById('autor').value = embedData.embedContent.author?.name || '';
+        const hexColor = '#' + (embedData.embedContent.color ? embedData.embedContent.color.toString(16).padStart(6, '0') : '5865f2');
+        document.getElementById('color').value = hexColor;
+        document.getElementById('descripcion').value = embedData.embedContent.description || '';
+        document.getElementById('imagen').value = embedData.embedContent.image?.url || '';
+        document.getElementById('thumbnail').value = embedData.embedContent.thumbnail?.url || '';
+        document.getElementById('footer').value = embedData.embedContent.footer?.text || '';
+        document.getElementById('footerIcon').value = embedData.embedContent.footer?.icon_url || '';
+        document.getElementById('reactionEmoji').value = embedData.reactionEmoji || '';
 
-                if (form.footer) form.footer.value = embedContent.footer?.text || '';
-                if (form.footerIcon) form.footerIcon.value = embedContent.footer?.icon_url || '';
-                
-                if (reactionEmojiInput) {
-                    reactionEmojiInput.value = embed.reactionEmoji || '';
-                }
+        // Limpiar y añadir campos adicionales
+        additionalFieldsContainer.innerHTML = '';
+        if (embedData.embedContent.fields && embedData.embedContent.fields.length > 0) {
+            const noFieldsMessage = document.getElementById('no-fields-message');
+            if(noFieldsMessage) noFieldsMessage.style.display = 'none';
+            embedData.embedContent.fields.forEach(field => addField(field.name, field.value));
+        } else {
+            const p = document.createElement('p');
+            p.id = 'no-fields-message';
+            p.className = 'text-muted';
+            p.textContent = 'No hay campos adicionales.';
+            additionalFieldsContainer.appendChild(p);
+        }
 
-                if (additionalFieldsContainer) {
-                    additionalFieldsContainer.innerHTML = '';
-                }
-                if (embedContent.fields) {
-                    embedContent.fields.forEach(field => {
-                        addField(field.name, field.value);
-                    });
-                }
+        // Cargar canales y roles del servidor
+        await loadChannelsAndRoles(embedData.guildId);
+        channelSelect.value = embedData.channelId;
+        roleSelect.value = embedData.roleId;
+
+        if (isDuplicating) {
+            document.querySelector('#edit-embed-section h3').textContent = 'Duplicar Embed';
+            submitButton.textContent = 'Crear Embed';
+            embedMessageIdInput.value = ''; 
+        } else if (embedData.isPublished) {
+            document.querySelector('#edit-embed-section h3').textContent = 'Editar Embed Activo';
+            submitButton.textContent = 'Guardar Cambios en Discord';
+            embedMessageIdInput.value = messageId;
+        } else {
+            document.querySelector('#edit-embed-section h3').textContent = 'Editar Borrador de Embed';
+            submitButton.textContent = 'Publicar Borrador';
+            embedMessageIdInput.value = messageId;
+        }
+
+        updatePreview();
+    } catch (error) {
+        console.error('Error al cargar el embed:', error);
+        document.querySelector('#edit-embed-section h3').textContent = 'Error: Embed no encontrado.';
+        form.style.display = 'none';
+    }
+}
+
+form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const embedId = embedMessageIdInput.value;
+    const isNewEmbed = !embedId;
+
+    const formData = new FormData(form);
+    const data = {};
+    for (const [key, value] of formData.entries()) {
+        if (key.endsWith('[]')) {
+            const fieldName = key.replace('[]', '');
+            if (!data[fieldName]) {
+                data[fieldName] = [];
+            }
+            data[fieldName].push(value);
+        } else {
+            data[key] = value;
+        }
+    }
+    
+    const postData = {
+        embedMessageId: data.embedMessageId,
+        channelId: data.channelId,
+        roleId: data.roleId,
+        color: data.color,
+        autor: data.autor,
+        titulo: data.titulo,
+        descripcion: data.descripcion,
+        imagen: data.imagen,
+        thumbnail: data.thumbnail,
+        footer: data.footer,
+        footerIcon: data.footerIcon,
+        reactionEmoji: data.reactionEmoji,
+        fieldNames: data.fieldNames || [],
+        fieldValues: data.fieldValues || []
+    };
+    
+    statusMessage.style.display = 'none';
+    statusMessage.className = 'status-message';
+    try {
+        let endpoint = '';
+        let isPublished = true;
+        let method = 'POST';
+
+        if (isNewEmbed) {
+            endpoint = '/api/embed';
+        } else {
+            const embedResponse = await fetch(`/api/get-embed/${embedId}`);
+            if (embedResponse.ok) {
+                const embedData = await embedResponse.json();
+                isPublished = embedData.isPublished;
             } else {
-                console.error('La propiedad embedContent no se encontró en la respuesta de la API.');
+                isPublished = false;
             }
 
-            await loadData();
-            if (channelSelect) channelSelect.value = embed.channelId;
-            if (roleSelect) roleSelect.value = embed.roleId;
-
-            updatePreview();
-
-        } catch (error) {
-            console.error('Error al cargar el embed:', error);
-            if (statusMessage) {
-                statusMessage.innerHTML = `<i class="fas fa-exclamation-triangle"></i> Error al cargar los datos del embed.`;
-                statusMessage.className = 'status-message error';
+            if (isPublished) {
+                endpoint = '/api/edit-embed';
+            } else {
+                endpoint = '/api/publish-embed/' + embedId;
+                const res = await fetch(endpoint, {
+                    method: 'POST',
+                });
+                const result = await res.json();
+                if (res.ok) {
+                    statusMessage.textContent = result.message;
+                    statusMessage.classList.add('confirmation');
+                    setTimeout(() => {
+                        window.location.href = `/embeds?guildId=${selectedGuildId}`;
+                    }, 1000);
+                } else {
+                    throw new Error(result.message || 'Error al publicar el embed.');
+                }
+                return;
             }
-            if (form) form.style.display = 'none';
         }
-    } else {
-        if (statusMessage) {
-            statusMessage.innerHTML = `<i class="fas fa-exclamation-triangle"></i> No se encontró el ID del embed para editar.`;
-            statusMessage.className = 'status-message error';
+        
+        const res = await fetch(endpoint, {
+            method: method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(postData)
+        });
+
+        const result = await res.json();
+        if (res.ok) {
+            statusMessage.textContent = result.message;
+            statusMessage.classList.add('confirmation');
+            setTimeout(() => {
+                window.location.href = `/embeds?guildId=${selectedGuildId}`;
+            }, 1000);
+        } else {
+            throw new Error(result.message || 'Error al guardar el embed.');
         }
-        if (form) form.style.display = 'none';
+
+    } catch (error) {
+        console.error('Error al guardar el embed:', error);
+        statusMessage.textContent = `Error: ${error.message}`;
+        statusMessage.classList.add('error');
     }
+    statusMessage.style.display = 'block';
+});
+
+document.addEventListener('DOMContentLoaded', async () => {
+    await loadData();
+    await loadEmbedToEdit();
 });

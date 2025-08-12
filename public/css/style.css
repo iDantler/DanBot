@@ -449,8 +449,10 @@ hr {
     align-items: center;
 }
 
-.edit-button,
-.delete-button {
+/* Estilos de botones de acción en la vista principal */
+.edit-button {
+    background-color: var(--primary-color);
+    color: #ffffff;
     border: none;
     border-radius: 6px;
     padding: 10px 15px;
@@ -460,11 +462,6 @@ hr {
     transition: background-color var(--transition-speed);
 }
 
-.edit-button {
-    background-color: var(--primary-color);
-    color: #ffffff;
-}
-
 .edit-button:hover {
     background-color: #4b54ce;
 }
@@ -472,10 +469,51 @@ hr {
 .delete-button {
     background-color: #e74c3c;
     color: #ffffff;
+    border: none;
+    border-radius: 6px;
+    padding: 10px 15px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color var(--transition-speed);
 }
 
 .delete-button:hover {
     background-color: #c0392b;
+}
+
+/* Nuevo estilo para el botón de "Publicar" */
+.publish-button {
+    background-color: #43b581; /* Verde de éxito */
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 10px 15px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color var(--transition-speed);
+}
+
+.publish-button:hover {
+    background-color: #3aa575; /* Un verde ligeramente más oscuro */
+}
+
+/* Estilo para el botón de "Restaurar" en la papelera */
+.recover-button {
+    background-color: #3498db;
+    color: #ffffff;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color var(--transition-speed);
+    padding: 10px 15px;
+}
+
+.recover-button:hover {
+    background-color: #2980b9;
 }
 
 .theme-toggle {
@@ -558,22 +596,6 @@ input:checked + .slider:before {
 
 .duplicate-button:hover {
     background-color: #e67e22;
-}
-
-.recover-button {
-    background-color: #3498db;
-    color: #ffffff;
-    border: none;
-    border-radius: 6px;
-    font-size: 0.9rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: background-color var(--transition-speed);
-    padding: 10px 15px;
-}
-
-.recover-button:hover {
-    background-color: #2980b9;
 }
 
 .navigation li a#nav-deleted.active {

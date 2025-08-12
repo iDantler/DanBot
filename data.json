@@ -1,7 +1,7 @@
 [
   {
     "guildId": "1054148346014613544",
-    "embedMessageId": "1402366042558169149",
+    "embedMessageId": "1404923419945996511",
     "channelId": "1391081035986632754",
     "reactionEmoji": "🦝",
     "roleId": "1402284384169754774",
@@ -28,6 +28,107 @@
           "inline": true
         }
       ]
-    }
+    },
+    "isPublished": true
+  },
+  {
+    "guildId": "1402302418502422609",
+    "embedMessageId": "1404921315374403686",
+    "channelId": "1402302419760582830",
+    "reactionEmoji": "😇",
+    "roleId": "1402302860405768283",
+    "embedContent": {
+      "title": "jeje",
+      "author": "23",
+      "color": "#ffa200",
+      "description": "asdasdsa",
+      "image": "",
+      "thumbnail": "",
+      "footer": "Hecho con ❤️ para la comunidad de TFT",
+      "footerIcon": "https://cdn.discordapp.com/avatars/259508642070528022/23deadbbd962c847c4208ffb22885732.webp?size=1024",
+      "fields": []
+    },
+    "deleted": true,
+    "isPublished": false
+  },
+  {
+    "guildId": "1402302418502422609",
+    "embedMessageId": "1755028021809",
+    "channelId": "1402302419760582831",
+    "reactionEmoji": "🥵",
+    "roleId": "1402302860405768283",
+    "embedContent": {
+      "title": "Esto es una prueba",
+      "author": "2534",
+      "color": "#5865f2",
+      "description": "2342343",
+      "image": "https://static-cdn.jtvnw.net/jtv_user_pictures/6b7e7db3-ed8b-41fd-8494-c0ae7686d7c1-profile_image-70x70.png",
+      "thumbnail": "https://static-cdn.jtvnw.net/jtv_user_pictures/6b7e7db3-ed8b-41fd-8494-c0ae7686d7c1-profile_image-70x70.png",
+      "footer": "Hecho con ❤️ para la comunidad de TFT",
+      "footerIcon": "https://cdn.discordapp.com/avatars/259508642070528022/23deadbbd962c847c4208ffb22885732.webp?size=1024",
+      "fields": []
+    },
+    "deleted": true,
+    "isPublished": false
+  },
+  {
+    "guildId": "1402302418502422609",
+    "embedMessageId": "1404916540327067678",
+    "channelId": "1402302419760582830",
+    "reactionEmoji": "😇",
+    "roleId": "1402302860405768283",
+    "embedContent": {
+      "title": "jeje",
+      "author": "23",
+      "color": "#000000",
+      "description": "asdasdsa",
+      "image": "",
+      "thumbnail": "",
+      "footer": "",
+      "footerIcon": "",
+      "fields": []
+    },
+    "deleted": true,
+    "isPublished": false
+  },
+  {
+    "guildId": "1402302418502422609",
+    "embedMessageId": "1404916837933781116",
+    "channelId": "1402302419760582830",
+    "reactionEmoji": "😇",
+    "roleId": "1402302860405768283",
+    "embedContent": {
+      "title": "jeje",
+      "author": "23",
+      "color": "#000000",
+      "description": "asdasdsa",
+      "image": "",
+      "thumbnail": "",
+      "footer": "",
+      "footerIcon": "",
+      "fields": []
+    },
+    "deleted": true,
+    "isPublished": false
+  },
+  {
+    "guildId": "1402302418502422609",
+    "embedMessageId": "1404921495976808471",
+    "channelId": "1402302419760582831",
+    "reactionEmoji": "🐗",
+    "roleId": "1402302860405768283",
+    "embedContent": {
+      "title": "22",
+      "author": "iDantler3423432",
+      "color": "#5865f2",
+      "description": "sdfsdfdsf",
+      "image": "",
+      "thumbnail": "https://static-cdn.jtvnw.net/jtv_user_pictures/6b7e7db3-ed8b-41fd-8494-c0ae7686d7c1-profile_image-70x70.png",
+      "footer": "Hecho con ❤️ para la comunidad de TFT",
+      "footerIcon": "",
+      "fields": []
+    },
+    "deleted": true,
+    "isPublished": false
   }
 ]
