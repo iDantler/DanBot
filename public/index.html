@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Creador de Embeds</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <link rel="stylesheet" href="/css/style.css">
     <link rel="stylesheet" href="/css/dark-mode.css">
 </head>
@@ -12,28 +12,21 @@
 
     <header class="sidebar">
         <div class="header-content">
-            <div class="logo">
-                <i class="fas fa-robot"></i>
-                <h1>Bot Panel</h1>
+            <div class="server-profile" id="server-profile">
+                <img id="server-icon" src="" alt="Icono del servidor">
+                <div class="server-initial-icon" id="server-initial-icon"></div>
+                <span id="server-name">Selecciona un servidor</span>
             </div>
+            <ul class="server-dropdown" id="server-dropdown">
+                </ul>
         </div>
 
         <nav class="navigation">
             <ul>
-                <li><a href="/" id="nav-create" class="active"><i class="fas fa-plus-square"></i> Crear Embed</a></li>
-                <li><a href="/embeds" id="nav-view"><i class="fas fa-list"></i> Ver Embeds</a></li>
+                <li><a href="#" id="nav-create" class="active"><i class="fas fa-plus-square"></i> Crear Embed</a></li>
+                <li><a href="#" id="nav-view"><i class="fas fa-list"></i> Ver Embeds</a></li>
             </ul>
         </nav>
-        
-        <div class="server-profile" id="server-profile">
-            <div class="server-icon-container">
-                <img id="server-icon" src="" alt="Icono del servidor" style="display: none;">
-                <div id="server-initial-icon" class="server-initial-icon"></div>
-            </div>
-            <span id="server-name">Selecciona un servidor</span>
-            <i class="fas fa-chevron-down dropdown-arrow"></i>
-        </div>
-        <ul class="server-dropdown" id="server-dropdown"></ul>
 
         <div class="theme-toggle">
             <label class="switch">
@@ -42,28 +35,24 @@
             </label>
             <span>Modo Oscuro</span>
         </div>
-    </header>
+
+        </header>
 
     <main class="main-content">
         <section class="content-section" id="create-embed-section">
             <div class="form-container">
-                <h3>Crear Nuevo Embed</h3>
                 <form id="embed-form">
                     <div class="form-row">
-                        <label for="channel-select">Canal de Texto</label>
-                        <select id="channel-select" name="channelId" required disabled>
-                            <option value="">Selecciona un canal</option>
-                        </select>
+                        <label for="channel-select">Canal</label>
+                        <select id="channel-select" name="channelId" required disabled></select>
                     </div>
                     <div class="form-row">
-                        <label for="role-select">Rol a Asignar</label>
-                        <select id="role-select" name="roleId" required disabled>
-                            <option value="">Selecciona un rol</option>
-                        </select>
+                        <label for="role-select">Rol a asignar</label>
+                        <select id="role-select" name="roleId" required disabled></select>
                     </div>
                     <div class="form-row">
-                        <label for="reactionEmoji">Emoji de Reacción</label>
-                        <input type="text" id="reactionEmoji" name="reactionEmoji" placeholder="Ej: ✅" required>
+                        <label for="reaction-emoji">Emoji de Reacción</label>
+                        <input type="text" id="reaction-emoji" name="reactionEmoji" placeholder="Ej: ✅" required>
                     </div>
                     <hr>
                     <div class="form-row">
@@ -108,20 +97,21 @@
 
             <div class="preview-container">
                 <h3>Vista Previa</h3>
-                <div class="embed-preview" id="embed-preview"></div>
+                <div class="embed-preview" id="embed-preview">
+                    </div>
             </div>
         </section>
-        
+
         <section class="content-section" id="view-embeds-section" style="display: none;">
             <div class="embeds-list-container">
                 <h3>Embeds Activos</h3>
-                <div id="embeds-container"></div>
+                <div id="embeds-container">
+                    </div>
             </div>
         </section>
     </main>
 
     <script src="/js/index.js"></script>
-    <script src="/js/theme-toggle.js"></script>
 
 </body>
 </html>

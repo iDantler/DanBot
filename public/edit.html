@@ -5,17 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Editar Embed</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
     <link rel="stylesheet" href="/css/style.css">
+    
     <link rel="stylesheet" href="/css/dark-mode.css">
 </head>
 <body>
 
     <header class="sidebar">
         <div class="header-content">
-            <div class="logo">
-                <i class="fas fa-robot"></i>
-                <h1>Bot Panel</h1>
+            <div class="server-profile" id="server-profile">
+                <img id="server-icon" src="" alt="Icono del servidor">
+                <div class="server-initial-icon" id="server-initial-icon"></div>
+                <span id="server-name">Selecciona un servidor</span>
             </div>
+            <ul class="server-dropdown" id="server-dropdown">
+            </ul>
         </div>
 
         <nav class="navigation">
@@ -25,16 +30,6 @@
             </ul>
         </nav>
         
-        <div class="server-profile" id="server-profile">
-            <div class="server-icon-container">
-                <img id="server-icon" src="" alt="Icono del servidor" style="display: none;">
-                <div id="server-initial-icon" class="server-initial-icon"></div>
-            </div>
-            <span id="server-name">Selecciona un servidor</span>
-            <i class="fas fa-chevron-down dropdown-arrow"></i>
-        </div>
-        <ul class="server-dropdown" id="server-dropdown"></ul>
-
         <div class="theme-toggle">
             <label class="switch">
                 <input type="checkbox" id="theme-toggle-checkbox">
@@ -51,20 +46,16 @@
                 <form id="edit-embed-form">
                     <input type="hidden" id="embed-message-id" name="embedMessageId">
                     <div class="form-row">
-                        <label for="channel-select">Canal de Texto</label>
-                        <select id="channel-select" name="channelId" required>
-                            <option value="">Selecciona un canal</option>
-                        </select>
+                        <label for="channel-select">Canal</label>
+                        <select id="channel-select" name="channelId" required></select>
                     </div>
                     <div class="form-row">
-                        <label for="role-select">Rol a Asignar</label>
-                        <select id="role-select" name="roleId" required>
-                            <option value="">Selecciona un rol</option>
-                        </select>
+                        <label for="role-select">Rol a asignar</label>
+                        <select id="role-select" name="roleId" required></select>
                     </div>
                     <div class="form-row">
-                        <label for="reactionEmoji">Emoji de Reacción</label>
-                        <input type="text" id="reactionEmoji" name="reactionEmoji" placeholder="Ej: ✅" required>
+                        <label for="reaction-emoji">Emoji de Reacción</label>
+                        <input type="text" id="reaction-emoji" name="reactionEmoji" placeholder="Ej: ✅" required>
                     </div>
                     <hr>
                     <div class="form-row">
@@ -109,13 +100,39 @@
 
             <div class="preview-container">
                 <h3>Vista Previa</h3>
-                <div class="embed-preview" id="embed-preview"></div>
+                <div class="embed-preview" id="embed-preview">
+                </div>
             </div>
         </section>
     </main>
 
     <script src="/js/edit.js"></script>
-    <script src="/js/theme-toggle.js"></script>
     
+    <script>
+    // Lógica para el cambio de tema
+    const themeToggleCheckbox = document.getElementById('theme-toggle-checkbox');
+    const isDarkMode = localStorage.getItem('darkMode') === 'true';
+
+    // Aplicar el tema guardado al cargar la página
+    if (isDarkMode) {
+        document.body.classList.add('dark-mode');
+        if (themeToggleCheckbox) {
+            themeToggleCheckbox.checked = true;
+        }
+    }
+
+    // Escuchar el evento de cambio en el checkbox
+    if (themeToggleCheckbox) {
+        themeToggleCheckbox.addEventListener('change', () => {
+            if (themeToggleCheckbox.checked) {
+                document.body.classList.add('dark-mode');
+                localStorage.setItem('darkMode', 'true');
+            } else {
+                document.body.classList.remove('dark-mode');
+                localStorage.setItem('darkMode', 'false');
+            }
+        });
+    }
+    </script>
 </body>
 </html>
