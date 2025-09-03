@@ -1,7 +1,7 @@
 [
   {
     "guildId": "1054148346014613544",
-    "embedMessageId": "1404923419945996511",
+    "embedMessageId": "1407005399063728209",
     "channelId": "1391081035986632754",
     "reactionEmoji": "🦝",
     "roleId": "1402284384169754774",
@@ -29,11 +29,12 @@
         }
       ]
     },
-    "isPublished": true
+    "isPublished": true,
+    "deleted": false
   },
   {
     "guildId": "1402302418502422609",
-    "embedMessageId": "1404921315374403686",
+    "embedMessageId": "1407000398698512485",
     "channelId": "1402302419760582830",
     "reactionEmoji": "😇",
     "roleId": "1402302860405768283",
@@ -53,7 +54,7 @@
   },
   {
     "guildId": "1402302418502422609",
-    "embedMessageId": "1755028021809",
+    "embedMessageId": "draft_1755527906073",
     "channelId": "1402302419760582831",
     "reactionEmoji": "🥵",
     "roleId": "1402302860405768283",
@@ -68,7 +69,7 @@
       "footerIcon": "https://cdn.discordapp.com/avatars/259508642070528022/23deadbbd962c847c4208ffb22885732.webp?size=1024",
       "fields": []
     },
-    "deleted": true,
+    "deleted": false,
     "isPublished": false
   },
   {
@@ -130,5 +131,35 @@
     },
     "deleted": true,
     "isPublished": false
+  },
+  {
+    "guildId": "1402302418502422609",
+    "embedMessageId": "1407000109870481558",
+    "channelId": "1402302419760582830",
+    "reactionEmoji": "🏆",
+    "roleId": "1406999755145482290",
+    "embedContent": {
+      "color": 0,
+      "author": null,
+      "title": "Reacciona para obtener el Rol de ( 🦝 | TFT )",
+      "description": "jaja saludos",
+      "image": null,
+      "thumbnail": null,
+      "footer": null,
+      "fields": [
+        {
+          "name": "Hoy me levanté",
+          "value": "De la cama 🤣",
+          "inline": false
+        },
+        {
+          "name": "Me quieren ver en la Blandino",
+          "value": "Amigos del beneficio",
+          "inline": false
+        }
+      ]
+    },
+    "deleted": false,
+    "isPublished": true
   }
 ]

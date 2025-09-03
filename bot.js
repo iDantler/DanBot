@@ -2,7 +2,7 @@ const fs = require('fs');
 const express = require('express');
 const path = require('path');
 require('dotenv').config();
-const { Client, GatewayIntentBits, EmbedBuilder, REST, Routes, ChannelType } = require('discord.js');
+const { Client, GatewayIntentBits, EmbedBuilder, REST, Routes, ChannelType, SlashCommandBuilder, Events } = require('discord.js');
 
 // --- Configuración del servidor web ---
 const app = express();
@@ -67,18 +67,39 @@ const loadMessageData = () => {
     return []; // Devolver una lista vacía en caso de error o si el archivo no existe
 };
 
-client.once('ready', async () => {
+// Define tus comandos slash
+const commands = [
+    new SlashCommandBuilder()
+        .setName('ping')
+        .setDescription('Responde con Pong!')
+].map(command => command.toJSON());
+
+client.once(Events.ClientReady, async () => {
     console.log(`¡El bot ${client.user.tag} está listo!`);
     embedsData = loadMessageData(); // Cargar los datos al inicio del bot
     
+    // Registrar comandos slash al iniciar el bot
     const rest = new REST({ version: '10' }).setToken(BOT_TOKEN);
     try {
+        console.log('Iniciando el registro de comandos de aplicación (/)');
         await rest.put(
             Routes.applicationCommands(CLIENT_ID),
-            { body: [] },
+            { body: commands }
         );
+        console.log('Comandos de aplicación registrados correctamente.');
     } catch (error) {
         console.error('Error al registrar/eliminar comandos:', error);
+    }
+});
+
+// Manejador de eventos para interacciones (incluidos los comandos slash)
+client.on(Events.InteractionCreate, async interaction => {
+    if (!interaction.isChatInputCommand()) return;
+
+    const { commandName } = interaction;
+
+    if (commandName === 'ping') {
+        await interaction.reply('Pong!');
     }
 });
 
@@ -508,7 +529,8 @@ client.on('messageReactionRemove', async (reaction, user) => {
         if (role && member) {
             await member.roles.remove(role).catch(console.error);
         }
-    }
+        }
 });
+
 
 client.login(process.env.DISCORD_BOT_TOKEN);
